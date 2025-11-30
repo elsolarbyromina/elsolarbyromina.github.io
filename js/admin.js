@@ -1,12 +1,32 @@
 // js/admin.js
+import { db } from './config.js';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Hacer funciones globales para que el HTML las vea (necesario al usar módulos)
+window.checkLogin = checkLogin;
+window.addCategory = addCategory;
+window.addSubcategory = addSubcategory;
+window.deleteCategory = deleteCategory;
+window.deleteSub = deleteSub;
+window.updateSubSelect = updateSubSelect;
+window.previewImage = previewImage;
+window.cancelEdit = cancelEdit;
+window.editProduct = editProduct;
+window.deleteProduct = deleteProduct;
+window.addCoupon = addCoupon;
+window.deleteCoupon = deleteCoupon;
+
+// VARIABLES DE ESTADO
+let categoriesCache = [];
+
+// 1. SEGURIDAD
 function checkLogin() {
     const pass = document.getElementById('admin-pass').value;
     if (pass === "1234") {
         document.getElementById('login-overlay').style.display = 'none';
         initAdmin();
     } else {
-        alert("Contraseña incorrecta");
+        alert("Incorrecto");
     }
 }
 
@@ -16,137 +36,124 @@ function initAdmin() {
     loadCoupons();
 }
 
-// GESTIÓN DE IMÁGENES Y VIDEO
+// 2. GESTIÓN DE IMÁGENES
 function previewImage(input) {
     const file = input.files[0];
     if (file) {
-        if (file.type.startsWith('video/') && file.size > 5000000) { 
-            alert("⚠️ El video es un poco pesado. Intenta que sea de menos de 5MB.");
-        }
-        if (file.size > 3000000 && !file.type.startsWith('video/')) {
-             alert("⚠️ Imagen muy grande. Intenta comprimirla antes.");
-        }
-
+        if (file.size > 800000) return alert("⚠️ La imagen es muy pesada (Máx 800KB). Firestore tiene límite de 1MB por documento.");
+        
         const reader = new FileReader();
         reader.onload = function(e) {
-            const result = e.target.result;
-            const isVideo = result.startsWith('data:video');
-
-            document.getElementById('p-img-base64').value = result;
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('preview-img').style.display = 'block';
+            document.getElementById('p-img-base64').value = e.target.result;
             document.querySelector('.upload-placeholder').style.display = 'none';
-
-            if (isVideo) {
-                document.getElementById('preview-img').style.display = 'none';
-                const vid = document.getElementById('preview-video');
-                if(vid) {
-                    vid.src = result;
-                    vid.style.display = 'block';
-                }
-            } else {
-                if(document.getElementById('preview-video')) document.getElementById('preview-video').style.display = 'none';
-                const img = document.getElementById('preview-img');
-                img.src = result;
-                img.style.display = 'block';
-            }
         };
         reader.readAsDataURL(file);
     }
 }
 
-// CATEGORÍAS
-function loadCategories() {
-    const cats = JSON.parse(localStorage.getItem('categories')) || [];
+// 3. GESTIÓN DE CATEGORÍAS (FIRESTORE)
+async function loadCategories() {
     const listDiv = document.getElementById('categories-list');
     const selectTarget = document.getElementById('target-cat-select');
     const productCatSelect = document.getElementById('p-cat');
     
-    listDiv.innerHTML = '';
+    listDiv.innerHTML = 'Cargando...';
     selectTarget.innerHTML = '';
     productCatSelect.innerHTML = '<option value="">Seleccionar...</option>';
 
-    cats.forEach((cat) => {
-        const option = `<option value="${cat.id}">${cat.name}</option>`;
-        selectTarget.innerHTML += option;
-        productCatSelect.innerHTML += option;
+    try {
+        const querySnapshot = await getDocs(collection(db, "categories"));
+        listDiv.innerHTML = '';
+        categoriesCache = [];
 
-        let subsHTML = '';
-        cat.subs.forEach((sub) => {
-            subsHTML += `<span class="sub-badge">${sub} <span onclick="deleteSub('${cat.id}', '${sub}')" style="cursor:pointer;margin-left:3px;opacity:0.7;">&times;</span></span> `;
-        });
+        querySnapshot.forEach((docSnap) => {
+            const cat = { id: docSnap.id, ...docSnap.data() };
+            categoriesCache.push(cat);
 
-        const div = document.createElement('div');
-        div.className = 'cat-item';
-        div.innerHTML = `
-            <div style="flex:1;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <strong>${cat.name}</strong>
-                    <button onclick="renameCategory('${cat.id}')" style="border:none; background:none; cursor:pointer; color:#74b9ff;"><i class="ph ph-pencil-simple"></i></button>
+            // Llenar selects
+            const option = `<option value="${cat.id}">${cat.name}</option>`;
+            selectTarget.innerHTML += option;
+            productCatSelect.innerHTML += option;
+
+            // Llenar lista visual
+            let subsHTML = '';
+            if(cat.subs) {
+                cat.subs.forEach(sub => {
+                    subsHTML += `<span class="sub-badge">${sub} <span onclick="deleteSub('${cat.id}', '${sub}')" style="cursor:pointer;margin-left:3px;">×</span></span> `;
+                });
+            }
+
+            const div = document.createElement('div');
+            div.className = 'cat-item';
+            div.innerHTML = `
+                <div style="flex:1;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <strong>${cat.name}</strong>
+                    </div>
+                    <div style="margin-top:5px;">${subsHTML}</div>
                 </div>
-                <div style="margin-top:5px;">${subsHTML}</div>
-            </div>
-            <button onclick="deleteCategory('${cat.id}')" style="color:red;border:none;background:none;cursor:pointer;font-size:1.2rem;"><i class="ph ph-trash"></i></button>
-        `;
-        listDiv.appendChild(div);
-    });
-    updateSubSelect();
+                <button onclick="deleteCategory('${cat.id}')" style="color:red;border:none;background:none;cursor:pointer;font-size:1.2rem;"><i class="ph ph-trash"></i></button>
+            `;
+            listDiv.appendChild(div);
+        });
+        updateSubSelect();
+    } catch (e) {
+        console.error("Error cargando categorías: ", e);
+        alert("Error de conexión con Firebase");
+    }
 }
 
-function addCategory() {
+async function addCategory() {
     const name = document.getElementById('new-cat-name').value.trim();
     if (!name) return alert("Escribe un nombre");
-    const id = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    let cats = JSON.parse(localStorage.getItem('categories')) || [];
-    if (cats.find(c => c.id === id)) return alert("Ya existe");
-    cats.push({ id: id, name: name, subs: [] });
-    localStorage.setItem('categories', JSON.stringify(cats));
-    document.getElementById('new-cat-name').value = '';
-    loadCategories();
-}
-
-function renameCategory(id) {
-    let cats = JSON.parse(localStorage.getItem('categories'));
-    const catIndex = cats.findIndex(c => c.id === id);
-    if (catIndex === -1) return;
-    const newName = prompt("Nuevo nombre:", cats[catIndex].name);
-    if (newName) {
-        cats[catIndex].name = newName.trim();
-        localStorage.setItem('categories', JSON.stringify(cats));
+    
+    try {
+        await addDoc(collection(db, "categories"), {
+            name: name,
+            subs: []
+        });
+        document.getElementById('new-cat-name').value = '';
         loadCategories();
+    } catch (e) {
+        alert("Error al crear: " + e.message);
     }
 }
 
-function addSubcategory() {
+async function addSubcategory() {
     const catId = document.getElementById('target-cat-select').value;
     const subName = document.getElementById('new-sub-name').value.trim().toLowerCase().replace(/ /g, '-');
+    
     if (!subName || !catId) return alert("Faltan datos");
-    let cats = JSON.parse(localStorage.getItem('categories'));
-    const cat = cats.find(c => c.id === catId);
-    if (cat) {
-        if (!cat.subs.includes(subName)) {
-            cat.subs.push(subName);
-            localStorage.setItem('categories', JSON.stringify(cats));
+
+    const cat = categoriesCache.find(c => c.id === catId);
+    if(cat) {
+        const newSubs = cat.subs ? [...cat.subs, subName] : [subName];
+        try {
+            await updateDoc(doc(db, "categories", catId), {
+                subs: newSubs
+            });
             document.getElementById('new-sub-name').value = '';
             loadCategories();
-        } else { alert("Ya existe"); }
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
 
-function deleteCategory(id) {
+async function deleteCategory(id) {
     if(!confirm("¿Borrar categoría?")) return;
-    let cats = JSON.parse(localStorage.getItem('categories'));
-    cats = cats.filter(c => c.id !== id);
-    localStorage.setItem('categories', JSON.stringify(cats));
+    await deleteDoc(doc(db, "categories", id));
     loadCategories();
-    loadProducts();
 }
 
-function deleteSub(catId, subName) {
+async function deleteSub(catId, subName) {
     if(!confirm("¿Borrar subcategoría?")) return;
-    let cats = JSON.parse(localStorage.getItem('categories'));
-    const cat = cats.find(c => c.id === catId);
-    if (cat) {
-        cat.subs = cat.subs.filter(s => s !== subName);
-        localStorage.setItem('categories', JSON.stringify(cats));
+    const cat = categoriesCache.find(c => c.id === catId);
+    if(cat) {
+        const newSubs = cat.subs.filter(s => s !== subName);
+        await updateDoc(doc(db, "categories", catId), { subs: newSubs });
         loadCategories();
     }
 }
@@ -155,8 +162,7 @@ function updateSubSelect() {
     const catId = document.getElementById('p-cat').value;
     const subSelect = document.getElementById('p-sub');
     subSelect.innerHTML = '';
-    const cats = JSON.parse(localStorage.getItem('categories')) || [];
-    const cat = cats.find(c => c.id === catId);
+    const cat = categoriesCache.find(c => c.id === catId);
     if (cat && cat.subs) {
         cat.subs.forEach(sub => {
             subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
@@ -164,63 +170,50 @@ function updateSubSelect() {
     }
 }
 
-// PRODUCTOS
-function loadProducts() {
-    const products = JSON.parse(localStorage.getItem('products')) || [];
+// 4. GESTIÓN DE PRODUCTOS (FIRESTORE)
+async function loadProducts() {
     const grid = document.getElementById('admin-products-grid');
+    grid.innerHTML = 'Cargando productos de la nube...';
+    
+    const querySnapshot = await getDocs(collection(db, "products"));
+    const products = [];
+    querySnapshot.forEach((doc) => {
+        products.push({ firebaseId: doc.id, ...doc.data() });
+    });
+
     document.getElementById('total-products').innerText = products.length;
     grid.innerHTML = '';
+    
     products.forEach((p) => {
         const div = document.createElement('div');
         div.className = 'product-mini';
-        
-        // Miniatura: video o imagen
-        let mediaTag = `<img src="${p.img}" alt="${p.name}">`;
-        if (p.img.startsWith('data:video')) {
-            mediaTag = `<video src="${p.img}" muted></video>`;
-        }
-
         div.innerHTML = `
             <div class="actions">
-                <button class="action-btn btn-edit" onclick="editProduct(${p.id})"><i class="ph ph-pencil-simple"></i></button>
-                <button class="action-btn btn-del" onclick="deleteProduct(${p.id})"><i class="ph ph-trash"></i></button>
+                <button class="action-btn btn-edit" onclick="editProduct('${p.firebaseId}')"><i class="ph ph-pencil-simple"></i></button>
+                <button class="action-btn btn-del" onclick="deleteProduct('${p.firebaseId}')"><i class="ph ph-trash"></i></button>
             </div>
-            ${mediaTag}
+            <img src="${p.img}" alt="${p.name}">
             <h4>${p.name}</h4>
             <p>$${p.price}</p>
             <small>${p.category} > ${p.sub}</small>
         `;
         grid.appendChild(div);
     });
+    
+    // Guardar en variable global para editar sin re-fetchear
+    window.adminProductsCache = products;
 }
 
-function editProduct(id) {
-    const products = JSON.parse(localStorage.getItem('products'));
-    const p = products.find(prod => prod.id === id);
+function editProduct(firebaseId) {
+    const p = window.adminProductsCache.find(prod => prod.firebaseId === firebaseId);
     if (p) {
-        document.getElementById('edit-id').value = p.id;
+        document.getElementById('edit-id').value = firebaseId; // Usamos ID de Firebase
         document.getElementById('p-name').value = p.name;
         document.getElementById('p-price').value = p.price;
         document.getElementById('p-img-base64').value = p.img;
-        
+        document.getElementById('preview-img').src = p.img;
+        document.getElementById('preview-img').style.display = 'block';
         document.querySelector('.upload-placeholder').style.display = 'none';
-        
-        // Detección de video para preview en edición
-        const isVideo = p.img.startsWith('data:video') || p.img.endsWith('.mp4');
-        if (isVideo) {
-            document.getElementById('preview-img').style.display = 'none';
-            const vid = document.getElementById('preview-video');
-            if(vid) {
-                vid.src = p.img;
-                vid.style.display = 'block';
-            }
-        } else {
-            if(document.getElementById('preview-video')) document.getElementById('preview-video').style.display = 'none';
-            const img = document.getElementById('preview-img');
-            img.src = p.img;
-            img.style.display = 'block';
-        }
-
         document.getElementById('p-desc').value = p.desc || "";
         document.getElementById('p-badge').value = p.badge || "";
         document.getElementById('p-cat').value = p.category;
@@ -228,7 +221,7 @@ function editProduct(id) {
         document.getElementById('p-sub').value = p.sub;
 
         document.getElementById('form-title').innerText = "✏️ Editando Producto";
-        document.getElementById('save-btn').innerText = "Actualizar";
+        document.getElementById('save-btn').innerText = "Actualizar en Nube";
         document.getElementById('cancel-btn').style.display = "inline-block";
         document.getElementById('product-form-card').classList.add('editing-mode');
         document.getElementById('product-form-card').scrollIntoView({ behavior: 'smooth' });
@@ -240,8 +233,6 @@ function cancelEdit() {
     document.getElementById('edit-id').value = "";
     document.getElementById('p-img-base64').value = "";
     document.getElementById('preview-img').style.display = 'none';
-    if(document.getElementById('preview-video')) document.getElementById('preview-video').style.display = 'none';
-    
     document.querySelector('.upload-placeholder').style.display = 'block';
     document.getElementById('form-title').innerText = "➕ Agregar Producto";
     document.getElementById('save-btn').innerText = "Guardar";
@@ -249,14 +240,13 @@ function cancelEdit() {
     document.getElementById('product-form-card').classList.remove('editing-mode');
 }
 
-document.getElementById('add-product-form').addEventListener('submit', function(e) {
+document.getElementById('add-product-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    let products = JSON.parse(localStorage.getItem('products')) || [];
     const editId = document.getElementById('edit-id').value;
     const imgValue = document.getElementById('p-img-base64').value || "https://placehold.co/300x200?text=Sin+Foto";
 
     const productData = {
-        id: editId ? parseInt(editId) : Date.now(),
+        id: Date.now(), // ID numérico para compatibilidad interna
         name: document.getElementById('p-name').value,
         price: Number(document.getElementById('p-price').value),
         category: document.getElementById('p-cat').value,
@@ -266,61 +256,69 @@ document.getElementById('add-product-form').addEventListener('submit', function(
         badge: document.getElementById('p-badge').value || null
     };
 
-    if (editId) {
-        const index = products.findIndex(p => p.id == editId);
-        if (index !== -1) { products[index] = productData; alert("Actualizado"); }
-    } else {
-        products.unshift(productData);
-        alert("Creado");
-    }
+    const btn = document.getElementById('save-btn');
+    btn.innerText = "Guardando...";
+    btn.disabled = true;
 
-    localStorage.setItem('products', JSON.stringify(products));
-    cancelEdit();
-    loadProducts();
+    try {
+        if (editId) {
+            // Actualizar
+            await updateDoc(doc(db, "products", editId), productData);
+            alert("Producto actualizado en la nube.");
+        } else {
+            // Crear
+            await addDoc(collection(db, "products"), productData);
+            alert("Producto creado en la nube.");
+        }
+        cancelEdit();
+        loadProducts();
+    } catch (e) {
+        console.error(e);
+        alert("Error al guardar: " + e.message);
+    } finally {
+        btn.innerText = "Guardar";
+        btn.disabled = false;
+    }
 });
 
-function deleteProduct(id) {
-    if(!confirm("¿Borrar?")) return;
-    let products = JSON.parse(localStorage.getItem('products'));
-    products = products.filter(p => p.id !== id);
-    localStorage.setItem('products', JSON.stringify(products));
-    loadProducts();
-}
-
-// CUPONES
-function loadCoupons() {
-    const coupons = JSON.parse(localStorage.getItem('coupons')) || {};
-    const container = document.getElementById('coupons-list');
-    container.innerHTML = '';
-    for (const [code, discount] of Object.entries(coupons)) {
-        const div = document.createElement('div');
-        div.style.cssText = "background:var(--input-bg); padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;";
-        div.innerHTML = `<span><b>${code}</b> (${discount * 100}% OFF)</span><button onclick="deleteCoupon('${code}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="ph ph-trash"></i></button>`;
-        container.appendChild(div);
+async function deleteProduct(firebaseId) {
+    if(!confirm("¿Borrar producto de la base de datos?")) return;
+    try {
+        await deleteDoc(doc(db, "products", firebaseId));
+        loadProducts();
+    } catch (e) {
+        alert("Error al borrar: " + e.message);
     }
 }
 
-function addCoupon() {
+// 5. GESTIÓN DE CUPONES (FIRESTORE)
+async function loadCoupons() {
+    const container = document.getElementById('coupons-list');
+    container.innerHTML = 'Cargando...';
+    const snapshot = await getDocs(collection(db, "coupons"));
+    container.innerHTML = '';
+
+    snapshot.forEach(doc => {
+        const c = doc.data();
+        const div = document.createElement('div');
+        div.style.cssText = "background:var(--input-bg); padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;";
+        div.innerHTML = `<span><b>${c.code}</b> (${c.discount * 100}% OFF)</span><button onclick="deleteCoupon('${doc.id}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="ph ph-trash"></i></button>`;
+        container.appendChild(div);
+    });
+}
+
+async function addCoupon() {
     const code = document.getElementById('c-code').value.toUpperCase();
     const val = parseFloat(document.getElementById('c-value').value);
     if (!code || !val) return alert("Datos incompletos");
-    let coupons = JSON.parse(localStorage.getItem('coupons')) || {};
-    coupons[code] = val;
-    localStorage.setItem('coupons', JSON.stringify(coupons));
+    
+    await addDoc(collection(db, "coupons"), { code: code, discount: val });
     loadCoupons();
     document.getElementById('c-code').value = ''; document.getElementById('c-value').value = '';
 }
 
-function deleteCoupon(code) {
-    let coupons = JSON.parse(localStorage.getItem('coupons'));
-    delete coupons[code];
-    localStorage.setItem('coupons', JSON.stringify(coupons));
+async function deleteCoupon(docId) {
+    if(!confirm("¿Borrar cupón?")) return;
+    await deleteDoc(doc(db, "coupons", docId));
     loadCoupons();
-}
-
-function resetStock() {
-    if(confirm("⚠ ¿RESET TOTAL? Se borrará todo.")) {
-        localStorage.clear();
-        location.reload();
-    }
 }
