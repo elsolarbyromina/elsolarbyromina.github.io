@@ -14,8 +14,7 @@
 
     <nav class="floating-menu" id="floating-menu">
         <div class="menu-handle"><span>Categorías</span></div>
-        <div class="menu-scroll-content">
-            </div>
+        <div class="menu-scroll-content"></div>
     </nav>
 
     <section class="hero-slider reveal" id="hero-slider">
@@ -23,7 +22,7 @@
             <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1600&q=80" class="slide-bg" alt="Estilo">
             <div class="slide-content">
                 <h1>Estilo & Artesanía</h1>
-                <p>Descubre accesorios únicos hechos a mano.</p>
+                <p>Descubre accesorios únicos hechos a mano para resaltar tu personalidad.</p>
                 <button class="hero-btn" onclick="document.getElementById('products-container').scrollIntoView({behavior:'smooth'})">Ver Colección</button>
             </div>
         </div>
@@ -39,7 +38,7 @@
             <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1600&q=80" class="slide-bg" alt="Deco">
             <div class="slide-content">
                 <h1>Renueva tu Hogar</h1>
-                <p>Decoración minimalista.</p>
+                <p>Decoración minimalista y funcional.</p>
                 <button class="hero-btn" onclick="filterByMain('deco-gral'); document.getElementById('products-container').scrollIntoView({behavior:'smooth'})">Ir a Deco</button>
             </div>
         </div>
@@ -61,7 +60,7 @@
                     <button class="view-btn" onclick="setListView()" title="Vista Lista"><i class="ph ph-list-dashes"></i></button>
                 </div>
                 <div class="toolbar-count">
-                    <span id="product-count">0</span> productos
+                    <span id="product-count">0</span> productos encontrados
                 </div>
             </div>
 
@@ -69,9 +68,9 @@
                 <i class="ph ph-sort-ascending"></i>
                 <select id="sort-select" onchange="sortProducts(this.value)">
                     <option value="default">Relevancia</option>
-                    <option value="price-asc">Precio: Menor</option>
-                    <option value="price-desc">Precio: Mayor</option>
-                    <option value="alpha-asc">A - Z</option>
+                    <option value="price-asc">Precio: Menor a Mayor</option>
+                    <option value="price-desc">Precio: Mayor a Menor</option>
+                    <option value="alpha-asc">Nombre: A - Z</option>
                 </select>
             </div>
         </div>
@@ -83,14 +82,24 @@
         <h3 style="color:var(--text-muted); font-size:1.2rem; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
             <i class="ph ph-clock-counter-clockwise"></i> Visto Recientemente
         </h3>
-        <div class="products-grid" id="history-container" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem;"></div>
+        <div class="products-grid" id="history-container" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem;">
+            </div>
     </section>
 
     <section class="info-section reveal">
         <div class="info-grid">
-            <div class="info-item"><i class="ph ph-wallet"></i><h3>Efectivo / Transferencia</h3></div>
-            <div class="info-item"><i class="ph ph-map-pin"></i><h3>Punto de Encuentro</h3></div>
-            <div class="info-item"><i class="ph ph-whatsapp-logo"></i><h3>Atención Personalizada</h3></div>
+            <div class="info-item">
+                <i class="ph ph-wallet"></i>
+                <h3>Efectivo / Transferencia</h3>
+            </div>
+            <div class="info-item">
+                <i class="ph ph-map-pin"></i>
+                <h3>Punto de Encuentro</h3>
+            </div>
+            <div class="info-item">
+                <i class="ph ph-whatsapp-logo"></i>
+                <h3>Atención Personalizada</h3>
+            </div>
         </div>
     </section>
 
@@ -120,56 +129,96 @@
     <div class="overlay" id="overlay" onclick="toggleCart()"></div>
     
     <div class="sidebar" id="sidebar">
-        <div class="cart-header"><h2>Tu Pedido</h2><button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button></div>
+        <div class="cart-header">
+            <h2>Tu Pedido</h2>
+            <button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button>
+        </div>
+        
         <div class="shipping-progress-box">
             <p id="shipping-msg">¡Faltan <strong>$50.000</strong> para envío gratis!</p>
             <div class="progress-track"><div class="progress-fill" id="shipping-bar"></div></div>
         </div>
+        
         <div class="cart-items" id="cart-items"></div>
+        
         <div class="cart-footer">
-            <div class="total-row"><span>Total:</span><span id="cart-total">$0</span></div>
+            <div class="total-row">
+                <span>Total:</span>
+                <span id="cart-total">$0</span>
+            </div>
             <button class="whatsapp-btn" onclick="openCheckoutModal()">Ver Resumen y Confirmar</button>
         </div>
     </div>
 
     <div class="checkout-overlay" id="checkout-overlay">
         <div class="checkout-modal">
-            <div class="modal-header"><h3>Resumen</h3><button onclick="closeCheckoutModal()"><i class="ph ph-x"></i></button></div>
+            <div class="modal-header">
+                <h3>Resumen de Compra</h3>
+                <button onclick="closeCheckoutModal()"><i class="ph ph-x"></i></button>
+            </div>
+            
             <div class="modal-body" id="modal-body"></div>
-            <div class="coupon-section"><input type="text" id="coupon-input" placeholder="Código (Ej: TIENDA10)"><button onclick="applyCoupon()">Aplicar</button></div>
+            
+            <div class="coupon-section">
+                <input type="text" id="coupon-input" placeholder="Código (Ej: TIENDA10)">
+                <button onclick="applyCoupon()">Aplicar</button>
+            </div>
             <div id="coupon-msg"></div>
-            <div class="modal-total"><div id="modal-subtotal" style="display:none;">Sub: $0</div><div id="modal-discount" style="display:none;">Desc: -$0</div><div style="margin-top:5px;">Total: <span id="modal-total-price">$0</span></div></div>
-            <button class="confirm-btn" onclick="sendToWhatsApp()"><i class="ph ph-whatsapp-logo"></i> Confirmar y Enviar</button>
+
+            <div class="modal-total">
+                <div id="modal-subtotal" style="display:none; font-size:0.9rem;">Sub: $0</div>
+                <div id="modal-discount" style="display:none; font-size:0.9rem; color:#2ecc71;">Desc: -$0</div>
+                <div style="margin-top:5px;">Total: <span id="modal-total-price">$0</span></div>
+            </div>
+            
+            <button class="confirm-btn" onclick="sendToWhatsApp()">
+                <i class="ph ph-whatsapp-logo"></i> Confirmar y Enviar
+            </button>
         </div>
     </div>
 
     <div class="qv-overlay" id="qv-overlay" onclick="closeQuickView(event)">
         <div class="qv-modal" onclick="event.stopPropagation()">
             <button class="qv-close" onclick="closeQuickViewForce()"><i class="ph ph-x"></i></button>
+            
             <div class="qv-image-col">
-                </div>
+                <img src="" id="qv-img" alt="Producto">
+            </div>
+            
             <div class="qv-info-col">
                 <div class="qv-scroll-content">
                     <div class="qv-tabs">
                         <button class="qv-tab active" onclick="switchTab('details')">Detalles</button>
                         <button class="qv-tab" onclick="switchTab('reviews')">Reseñas (<span id="qv-review-count">0</span>)</button>
                     </div>
+
                     <div id="tab-details" class="tab-content active">
                         <div class="qv-category" id="qv-cat"></div>
                         <h2 class="qv-title" id="qv-title"></h2>
                         <div class="qv-stars" id="qv-stars-display"></div>
+                        
                         <div class="qv-price-box" id="qv-price-box"></div>
                         
                         <div class="urgency-box">
                             <p><i class="ph ph-eye"></i> <span id="qv-viewers">0</span> personas viendo.</p>
                             <p class="stock-warning"><i class="ph ph-fire"></i> ¡Pocas unidades!</p>
                         </div>
+                        
                         <p class="qv-desc" id="qv-desc"></p>
-                        <button class="add-btn" id="qv-add-btn" style="margin-bottom:1.5rem;"><i class="ph ph-basket"></i> Agregar</button>
-                        <div class="qv-related"><h4>También te podría gustar:</h4><div class="qv-related-grid" id="qv-related-container"></div></div>
+                        
+                        <button class="add-btn" id="qv-add-btn" style="margin-bottom:1.5rem;">
+                            <i class="ph ph-basket"></i> Agregar al Carrito
+                        </button>
+                        
+                        <div class="qv-related">
+                            <h4>También te podría gustar:</h4>
+                            <div class="qv-related-grid" id="qv-related-container"></div>
+                        </div>
                     </div>
+
                     <div id="tab-reviews" class="tab-content">
                         <div id="reviews-list"></div>
+                        
                         <div class="review-form">
                             <h4>Dejar reseña</h4>
                             <div class="star-rating-input">
@@ -202,7 +251,9 @@
     <div class="promo-overlay" id="promo-overlay">
         <div class="promo-modal">
             <button class="promo-close" onclick="closePromo()">×</button>
-            <div class="promo-img"><img src="https://images.unsplash.com/photo-1512413914633-b5043f4041ea?auto=format&fit=crop&w=500&q=80"></div>
+            <div class="promo-img">
+                <img src="https://images.unsplash.com/photo-1512413914633-b5043f4041ea?auto=format&fit=crop&w=500&q=80" alt="Promo">
+            </div>
             <div class="promo-content">
                 <h3>¡Regalo de Bienvenida!</h3>
                 <p>Usa este cupón en tu primera compra.</p>
