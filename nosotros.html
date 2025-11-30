@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda Pro | Nosotros</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="header-container"></div>
+
+    <section class="about-section reveal">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <h2>Nuestra Historia</h2>
+                    <p>Somos apasionados por el diseño y la artesanía. Lo que comenzó como un pequeño hobby en Morón, hoy es un espacio donde la creatividad se encuentra con la funcionalidad.</p>
+                    <p>Nuestra misión es ofrecer productos únicos, hechos a mano con materiales sostenibles.</p>
+                </div>
+                <div class="about-img">
+                    <img src="https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80" alt="Taller">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-container"></div>
+    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+    <div class="sidebar" id="sidebar">
+         <div class="cart-header"><h2>Tu Pedido</h2><button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button></div>
+         <div class="cart-items" id="cart-items"></div>
+         <div class="cart-footer"><button class="whatsapp-btn">Ir a Inicio</button></div>
+    </div>
+    <div class="checkout-overlay" id="checkout-overlay"></div>
+    <div class="qv-overlay" id="qv-overlay"></div>
+    <div id="toast-container"></div>
+    <script src="js/components.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

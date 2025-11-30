@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Tienda Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>Admin Acceso</h2>
+            <p style="margin-bottom:1rem; font-size:0.9rem;">Contraseña: 1234</p>
+            <input type="password" id="admin-pass" placeholder="Contraseña">
+            <button class="submit-btn" onclick="checkLogin()">Entrar</button>
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Panel de Control</h1>
+            <div style="display:flex; gap:10px;">
+                <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
+                <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>📂 Categorías</h3>
+            <div class="form-row" style="align-items:flex-end;">
+                <div class="form-group">
+                    <label>Nueva Categoría Principal</label>
+                    <input type="text" id="new-cat-name" placeholder="Ej: Cerámica">
+                </div>
+                <button onclick="addCategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Crear</button>
+            </div>
+            
+            <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.02); border-radius: 10px;">
+                <h4 style="margin-bottom:10px;">Agregar Subcategoría</h4>
+                <div class="form-row" style="align-items:flex-end;">
+                    <div class="form-group">
+                        <label>Elegir Categoría</label>
+                        <select id="target-cat-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre Subcategoría</label>
+                        <input type="text" id="new-sub-name" placeholder="Ej: Tazas">
+                    </div>
+                    <button onclick="addSubcategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Agregar Sub</button>
+                </div>
+            </div>
+            <div id="categories-list" style="margin-top:20px;"></div>
+        </div>
+
+        <div class="admin-card" id="product-form-card">
+            <h3 id="form-title">➕ Agregar Producto</h3>
+            <form id="add-product-form">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="p-img-base64">
+
+                <div class="form-row">
+                    <div class="form-group"><label>Nombre</label><input type="text" id="p-name" required></div>
+                    <div class="form-group"><label>Precio</label><input type="number" id="p-price" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="p-cat" onchange="updateSubSelect()" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subcategoría</label>
+                        <select id="p-sub" required></select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagen o Video del Producto</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="p-img-file" accept="image/*, video/mp4, video/webm" onchange="previewImage(this)">
+                        
+                        <div class="upload-placeholder" id="upload-placeholder">
+                            <i class="ph ph-upload-simple"></i>
+                            <span>Haz click para subir Foto, GIF o Video corto</span>
+                        </div>
+                        
+                        <img id="preview-img" class="img-preview" src="" alt="Vista Previa" style="display:none;">
+                        
+                        <video id="preview-video" class="img-preview" src="" controls style="display:none; height: 150px; width: 100%; object-fit: contain;"></video>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>Descripción</label><textarea id="p-desc" rows="2"></textarea></div>
+                <div class="form-group"><label>Etiqueta</label><select id="p-badge"><option value="">Ninguna</option><option value="Nuevo">Nuevo</option><option value="Oferta">Oferta</option></select></div>
+                
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="submit-btn" id="save-btn">Guardar Producto</button>
+                    <button type="button" class="submit-btn" id="cancel-btn" onclick="cancelEdit()" style="background:#636e72; display:none;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <h3>📦 Inventario (<span id="total-products">0</span>)</h3>
+            <div class="admin-grid" id="admin-products-grid"></div>
+        </div>
+
+        <div class="admin-card">
+            <h3>🎟️ Cupones</h3>
+            <div class="form-row" style="align-items: flex-end;">
+                <div class="form-group"><label>Código</label><input type="text" id="c-code"></div>
+                <div class="form-group"><label>Descuento (0.1 = 10%)</label><input type="number" step="0.01" id="c-value"></div>
+                <button onclick="addCoupon()" class="submit-btn" style="margin-bottom: 1.5rem;">Crear</button>
+            </div>
+            <div id="coupons-list"></div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

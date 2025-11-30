@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDIO v14</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>✨ STUDIO v14 ✨</h1>
+            <p>Paleta de Colores • Catálogo • Mosaico • IA</p>
+        </header>
+
+        <div class="card">
+            <section class="section-upload">
+                <h2>1. Sube tus fotos</h2>
+                <div class="file-drop-area">
+                    <span class="fake-btn">Elegir archivos</span>
+                    <span class="file-msg">o arrástralos aquí</span>
+                    <input class="file-input" type="file" id="inputImages" multiple accept="image/*">
+                </div>
+                <p id="countLabel" class="info-text">No has seleccionado imágenes</p>
+            </section>
+            <hr>
+
+            <section class="studio-section">
+                <h2>2. 🧠 Estudio & IA</h2>
+                <button id="btnAutoFix" onclick="runAutoFix()" class="btn-ai">🪄 MEJORA AUTOMÁTICA (IA)</button>
+                <p id="aiStatus" style="text-align:center; font-size:0.8rem; color:#d35400; height:20px;"></p>
+                
+                <div class="grid-2-cols mt-10">
+                    <div>
+                         <div class="slider-group">
+                            <label>☀️ Brillo: <span id="valBrightness">100%</span></label>
+                            <input type="range" id="rangeBrightness" min="50" max="150" value="100">
+                        </div>
+                        <div class="slider-group mt-10">
+                            <label>🌗 Contraste: <span id="valContrast">100%</span></label>
+                            <input type="range" id="rangeContrast" min="50" max="150" value="100">
+                        </div>
+                    </div>
+                    <div class="form-group box-style">
+                        <label>🎨 Filtro:</label>
+                        <select id="selectFilter">
+                            <option value="none">Original</option>
+                            <option value="grayscale(100%)">Blanco y Negro</option>
+                            <option value="sepia(100%)">Sepia</option>
+                            <option value="saturate(150%)">Colores Vivos</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <hr>
+
+            <section class="social-section">
+                <h2>3. 📱 Formato y Marcos</h2>
+                <div class="grid-2-cols">
+                    <div class="form-group box-highlight">
+                        <label>📐 Insta-Fit:</label>
+                        <select id="socialMode">
+                            <option value="none">Manual (Respetar tamaño abajo)</option>
+                            <option value="square">Cuadrado 1:1</option>
+                            <option value="story">Historia 9:16</option>
+                        </select>
+                    </div>
+                    <div class="form-group box-style">
+                         <label>⬜ Marco:</label>
+                        <div class="input-row">
+                            <input type="number" id="borderWidth" placeholder="Px" value="0" min="0">
+                            <input type="color" id="borderColor" value="#ffffff">
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <hr>
+
+            <section class="marketing-section">
+                <h2>4. 🏷️ Etiquetas Marketing</h2>
+                <div class="grid-2-cols">
+                    <div class="form-group box-marketing">
+                        <label>Texto Cinta:</label>
+                        <input type="text" id="stickerText" placeholder="Ej: OFERTA" maxlength="15">
+                        <div class="quick-tags mt-10">
+                            <span onclick="setSticker('VENDIDO')">VENDIDO</span>
+                            <span onclick="setSticker('NUEVO')">NUEVO</span>
+                        </div>
+                    </div>
+                    <div class="form-group box-marketing">
+                        <label>Estilo:</label>
+                        <div class="input-row">
+                            <input type="color" id="stickerColor" value="#e74c3c">
+                            <select id="stickerPos">
+                                <option value="top-right">Arriba Der.</option>
+                                <option value="top-left">Arriba Izq.</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <hr>
+
+            <section class="palette-section">
+                <h2>5. 🎨 Paleta de Colores (IA)</h2>
+                <div class="box-palette">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="checkPalette">
+                        <label for="checkPalette" style="font-weight:bold; color:#2980b9;">🌈 Generar barra de colores al pie</label>
+                    </div>
+                    <p style="font-size:0.85rem; color:#666; margin-top:5px; margin-left:25px;">
+                        El sistema analizará tu tejido y mostrará los 5 colores principales usados.
+                    </p>
+                </div>
+            </section>
+            <hr>
+
+            <section class="extras-section">
+                <h2>6. 🎀 Estilos Especiales</h2>
+                <div class="grid-2-cols">
+                    <div class="box-catalog">
+                        <label style="font-weight:bold;">📋 Modo Catálogo</label>
+                        <input type="text" id="catProduct" placeholder="Producto" class="mt-10">
+                        <input type="text" id="catPrice" placeholder="Precio" class="mt-10">
+                    </div>
+                    <div class="box-polaroid">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="checkPola" onclick="togglePolaroid()">
+                            <label for="checkPola" style="font-weight:bold; color:#d35400;">📸 Modo Polaroid</label>
+                        </div>
+                        <input type="text" id="polaText" placeholder="Frase manuscrita..." class="mt-10">
+                    </div>
+                </div>
+            </section>
+            <hr>
+
+            <section class="action-area">
+                <div class="grid-2-cols mb-30" style="text-align: left;">
+                    <div class="form-group">
+                        <label>© Logo (PNG):</label>
+                        <input type="file" id="inputLogo" accept="image/*">
+                    </div>
+                    <div>
+                         <div class="checkbox-group mt-20">
+                            <input type="checkbox" id="checkRoundLogo">
+                            <label for="checkRoundLogo">✂️ Logo Redondo</label>
+                        </div>
+                         <div class="form-group mt-10">
+                            <label>Ubicación:</label>
+                            <select id="logoPos">
+                                <option value="bottom-right">Abajo Derecha</option>
+                                <option value="center">Centro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>7. ⚡ Centro de Creación</h2>
+                
+                <div class="grid-2-cols action-grid">
+                    <div class="action-card">
+                        <h3>A. Fotos Sueltas</h3>
+                        <p class="desc-text">Redimensionar y Descargar.</p>
+                        <div class="grid-2-cols-narrow" style="margin-bottom:5px;">
+                            <div class="input-tiny-group">
+                                <label>Ancho:</label> <input type="number" id="inputWidth" placeholder="Ej: 1080">
+                            </div>
+                            <div class="input-tiny-group">
+                                <label>Alto:</label> <input type="number" id="inputHeight" placeholder="Opcional">
+                            </div>
+                        </div>
+                        <div class="checkbox-group justify-center mb-10" style="font-size:0.8rem;">
+                            <input type="checkbox" id="checkRatio" checked> <label>Proporción</label>
+                        </div>
+                        <button id="btnProcess" onclick="processImages()" class="btn-green">📸 DESCARGAR</button>
+                    </div>
+
+                    <div class="action-card highlight-card">
+                        <h3>B. GIF Animado</h3>
+                        <p class="desc-text">Video en bucle.</p>
+                        <div class="input-tiny-group mt-10">
+                            <label>Velocidad:</label> <input type="number" id="gifInterval" value="0.5" step="0.1">
+                        </div>
+                        <button id="btnGif" onclick="createGif()" class="btn-orange">🎬 CREAR GIF</button>
+                    </div>
+
+                    <div class="action-card blue-card">
+                        <h3>C. Tira Vertical</h3>
+                        <p class="desc-text">Una foto debajo de otra.</p>
+                        <div class="input-tiny-group mt-10">
+                            <label>Gap (px):</label> <input type="number" id="collageGap" value="20">
+                        </div>
+                        <button id="btnCollage" onclick="createCollage()" class="btn-blue">🧩 CREAR TIRA</button>
+                    </div>
+
+                    <div class="action-card purple-card">
+                        <h3>D. Mosaico Grilla</h3>
+                        <p class="desc-text">Grid 2x2, 3x3.</p>
+                        <div class="input-tiny-group mt-10">
+                            <label>Gap (px):</label> <input type="number" id="gridGap" value="10">
+                        </div>
+                        <button id="btnGrid" onclick="createGrid()" class="btn-purple">🔲 CREAR MOSAICO</button>
+                    </div>
+                </div>
+                
+                <input type="text" id="inputBaseName" placeholder="Nombre opcional para el archivo..." class="mt-20 full-width-input">
+
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar" id="progressBar">0%</div>
+                </div>
+                <p id="statusText"></p>
+            </section>
+        </div>
+    </div>
+    <script src="js/script.js"></script>
+</body>
+</html>
