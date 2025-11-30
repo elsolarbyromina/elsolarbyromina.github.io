@@ -6,9 +6,12 @@
 function loadHeader() {
     const headerHTML = `
     <header>
-        <div class="logo">
-            <a href="index.html" style="text-decoration:none; display:flex; align-items:center;">
-                <img src="https://placehold.co/150x50/6c5ce7/white?text=MI+MARCA" alt="Logo" style="height:40px;">
+       <div class="logo">
+            <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap: 10px;">
+                <img src="logo/logo romina.png" alt="Logo" style="height:60px;">
+                <span style="font-weight: 600; font-size: 1.2rem; color: var(--text-main);">
+                    El Solar by Romina
+                </span>
             </a>
         </div>
         
@@ -84,17 +87,25 @@ function loadFooter() {
             
             <div class="footer-column">
                 <h3>Contacto</h3>
-                <p><i class="ph ph-map-pin"></i> Morón, Buenos Aires</p>
-                <p><i class="ph ph-envelope"></i> hola@mimarca.com</p>
-                <p><i class="ph ph-whatsapp-logo"></i> +54 9 11 0000 0000</p>
+                <p><i class="ph ph-map-pin"></i> Haedo, Buenos Aires</p>
+                <p><i class="ph ph-envelope"></i> elsolarbyromina@gmail.com </p>
+                <p><i class="ph ph-whatsapp-logo"></i> +54 9 11 6872 2917</p>
             </div>
             
             <div class="footer-column">
                 <h3>Síguenos</h3>
                 <div class="social-icons">
-                    <a href="#" title="Instagram"><i class="ph ph-instagram-logo"></i></a>
-                    <a href="#" title="Facebook"><i class="ph ph-facebook-logo"></i></a>
-                    <a href="#" title="TikTok"><i class="ph ph-tiktok-logo"></i></a>
+                    <a href="https://www.instagram.com/elsolarbyromina?utm_source=qr&igsh=MXVqbDFxYjc0ZXpvaw==" target="_blank" rel="noopener noreferrer" title="Instagram">
+                        <i class="ph ph-instagram-logo"></i>
+                    </a>
+                    
+                    <a href="https://www.facebook.com/share/1Ha2bBCK7h/" target="_blank" rel="noopener noreferrer" title="Facebook">
+                        <i class="ph ph-facebook-logo"></i>
+                    </a>
+                    
+                    <a href="https://www.tiktok.com/@elsolarbyromina?_r=1&_t=ZS-91q0hTWpKc9" target="_blank" rel="noopener noreferrer" title="TikTok">
+                        <i class="ph ph-tiktok-logo"></i>
+                    </a>
                 </div>
             </div>
         </div>
