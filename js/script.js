@@ -20,7 +20,7 @@ window.sortProducts = sortProducts;
 window.applyCoupon = applyCoupon;
 window.sendToWhatsApp = sendToWhatsApp;
 window.toggleWishlist = toggleWishlist;
-window.showFavorites = showFavorites;
+window.showFavorites = showFavorites; // <--- ESTO DABA ERROR ANTES PORQUE FALTABA LA FUNCIÓN ABAJO
 window.setGridView = setGridView;
 window.setListView = setListView;
 window.closeSalesNotification = closeSalesNotification;
@@ -45,11 +45,7 @@ let currentProducts = [];   // Productos filtrados actuales
 let categoriesData = [];    // Categorías cargadas de Firebase
 let activeCoupons = [];     // Cupones cargados de Firebase
 
-// -------------------------------------------------------------------------
-// CAMBIO 1: RECUPERAR DATOS AL INICIO
-// Intentamos leer 'cart' del navegador. Si no existe, usamos [] (vacío).
-// JSON.parse convierte el texto guardado de vuelta a un Array de JavaScript.
-// -------------------------------------------------------------------------
+// Recuperar carrito del LocalStorage
 let cart = JSON.parse(localStorage.getItem('cart')) || []; 
 
 let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
@@ -99,9 +95,6 @@ async function initStore() {
         // Iniciar funcionalidades extra
         initSlider();
         renderHistory();
-        
-        // CAMBIO 2: Actualizar la visual del carrito apenas carga la página
-        // (Por si recuperamos productos del LocalStorage)
         updateCartUI(); 
         
         // Iniciar notificaciones y promo con retraso
@@ -180,6 +173,16 @@ function filterBySub(catId, subId) {
         const filtered = allProducts.filter(p => p.category === catId && p.sub === subId);
         renderFiltered(filtered);
         if(title) title.innerText = subId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    });
+}
+
+// NUEVA FUNCIÓN AGREGADA (Esta era la que faltaba)
+function showFavorites() {
+    renderWithAnimation(() => {
+        // Filtrar productos cuyo ID esté en la lista de deseos
+        const favs = allProducts.filter(p => wishlist.includes(String(p.id)));
+        renderFiltered(favs);
+        if(title) title.innerText = "Mis Favoritos ❤️";
     });
 }
 
@@ -366,11 +369,6 @@ function toggleWishlist(id, btn) {
     setTimeout(() => btn.classList.remove('animating'), 500);
 }
 
-// -------------------------------------------------------------------------
-// CAMBIO 3: NUEVA FUNCIÓN PARA GUARDAR
-// Esta función guarda el estado actual del carrito en la "libreta" (LocalStorage)
-// JSON.stringify convierte el Array del carrito a Texto para poder guardarlo.
-// -------------------------------------------------------------------------
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartUI(); // También actualizamos la vista
@@ -391,7 +389,6 @@ function addToCart(id, btnElement = null) {
         }
     }
     
-    // CAMBIO 4: Llamar a guardar después de modificar
     saveCart();
     
     if(btnElement) {
@@ -436,14 +433,14 @@ function changeQty(id, chg) {
     if(item) {
         item.qty += chg;
         if(item.qty <= 0) removeFromCart(id);
-        else saveCart(); // CAMBIO 5: Llamar a guardar
+        else saveCart(); 
     }
 }
 
 function removeFromCart(id) {
     id = String(id);
     cart = cart.filter(i => String(i.id) !== id);
-    saveCart(); // CAMBIO 6: Llamar a guardar
+    saveCart(); 
     showToast("Eliminado del carrito", "error");
 }
 
