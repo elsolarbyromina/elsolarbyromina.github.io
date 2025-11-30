@@ -1,12 +1,12 @@
 // js/config.js
 
-// 1. Importar las funciones de Firebase desde la nube (CDN)
-// Usamos la versión 10.7.1 para asegurar compatibilidad
+// 1. Importar las funciones de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; // <--- NUEVO
 
 // 2. Configuración de Firebase
-// Estos son los datos de tu proyecto "el-solar-by-romina"
 const firebaseConfig = {
   apiKey: "AIzaSyBeIFz8GsCezPitc-worEf1RVY7u5UdNs8",
   authDomain: "el-solar-by-romina.firebaseapp.com",
@@ -16,12 +16,13 @@ const firebaseConfig = {
   appId: "1:708832177266:web:d5564c3408a867753be6eb"
 };
 
-// 3. Inicializar la Aplicación de Firebase
+// 3. Inicializar la Aplicación
 const app = initializeApp(firebaseConfig);
 
-// 4. Inicializar el servicio de Base de Datos (Firestore)
+// 4. Inicializar los servicios
 const db = getFirestore(app);
+const storage = getStorage(app);
+const auth = getAuth(app); // <--- NUEVO: Inicializamos Auth
 
-// 5. Exportar la base de datos (db)
-// Esto permite que 'script.js' y 'admin.js' puedan usarla.
-export { db };
+// 5. Exportar para usar en otros archivos
+export { db, storage, auth };

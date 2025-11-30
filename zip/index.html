@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda Pro | Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="header-container"></div>
+
+    <nav class="floating-menu" id="floating-menu">
+        <div class="menu-handle"><span>Categorías</span></div>
+        <div class="menu-scroll-content"></div>
+    </nav>
+
+    <section class="hero-slider reveal" id="hero-slider">
+        <div class="slide active">
+            <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1600&q=80" class="slide-bg" alt="Estilo">
+            <div class="slide-content">
+                <h1>Estilo & Artesanía</h1>
+                <p>Descubre accesorios únicos hechos a mano para resaltar tu personalidad.</p>
+                <button class="hero-btn" onclick="document.getElementById('products-container').scrollIntoView({behavior:'smooth'})">Ver Colección</button>
+            </div>
+        </div>
+        <div class="slide">
+            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80" class="slide-bg" alt="Ofertas">
+            <div class="slide-content">
+                <h1>Ofertas de Temporada</h1>
+                <p>Hasta 30% OFF en seleccionados.</p>
+                <button class="hero-btn" onclick="filterByMain('all'); document.getElementById('products-container').scrollIntoView({behavior:'smooth'})">Ver Ofertas</button>
+            </div>
+        </div>
+        <div class="slide">
+            <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1600&q=80" class="slide-bg" alt="Deco">
+            <div class="slide-content">
+                <h1>Renueva tu Hogar</h1>
+                <p>Decoración minimalista y funcional.</p>
+                <button class="hero-btn" onclick="filterByMain('deco-gral'); document.getElementById('products-container').scrollIntoView({behavior:'smooth'})">Ir a Deco</button>
+            </div>
+        </div>
+        
+        <div class="slider-dots">
+            <div class="dot active" onclick="goToSlide(0)"></div>
+            <div class="dot" onclick="goToSlide(1)"></div>
+            <div class="dot" onclick="goToSlide(2)"></div>
+        </div>
+    </section>
+
+    <main class="container">
+        <h2 id="current-section-title" class="reveal" style="margin-bottom: 1.5rem; color: var(--primary); font-size: 1.5rem; margin-top: 2rem;">Todos los productos</h2>
+        
+        <div class="toolbar reveal">
+            <div class="toolbar-left" style="display: flex; align-items: center; gap: 15px;">
+                <div class="view-options" style="display: flex; gap: 5px; border-right: 1px solid var(--border-color); padding-right: 10px;">
+                    <button class="view-btn active" onclick="setGridView()" title="Vista Grilla"><i class="ph ph-squares-four"></i></button>
+                    <button class="view-btn" onclick="setListView()" title="Vista Lista"><i class="ph ph-list-dashes"></i></button>
+                </div>
+                <div class="toolbar-count">
+                    <span id="product-count">0</span> productos encontrados
+                </div>
+            </div>
+
+            <div class="toolbar-sort">
+                <i class="ph ph-sort-ascending"></i>
+                <select id="sort-select" onchange="sortProducts(this.value)">
+                    <option value="default">Relevancia</option>
+                    <option value="price-asc">Precio: Menor a Mayor</option>
+                    <option value="price-desc">Precio: Mayor a Menor</option>
+                    <option value="alpha-asc">Nombre: A - Z</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="products-grid" id="products-container"></div>
+    </main>
+
+    <section id="history-section" class="container reveal" style="display:none; margin-top:4rem; margin-bottom:2rem;">
+        <h3 style="color:var(--text-muted); font-size:1.2rem; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+            <i class="ph ph-clock-counter-clockwise"></i> Visto Recientemente
+        </h3>
+        <div class="products-grid" id="history-container" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem;">
+            </div>
+    </section>
+
+    <section class="info-section reveal">
+        <div class="info-grid">
+            <div class="info-item">
+                <i class="ph ph-wallet"></i>
+                <h3>Efectivo / Transferencia</h3>
+            </div>
+            <div class="info-item">
+                <i class="ph ph-map-pin"></i>
+                <h3>Punto de Encuentro</h3>
+            </div>
+            <div class="info-item">
+                <i class="ph ph-whatsapp-logo"></i>
+                <h3>Atención Personalizada</h3>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-container"></div>
+
+    <a href="https://wa.me/5491100000000" target="_blank" class="float-wa" title="WhatsApp">
+        <i class="ph ph-whatsapp-logo"></i>
+    </a>
+
+    <div class="chat-widget">
+        <button class="chat-btn" onclick="toggleChatWidget()"><i class="ph ph-chat-circle-dots"></i></button>
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <span>Asistente Virtual 🤖</span>
+                <button onclick="toggleChatWidget()"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot">Hola 👋 Soy la IA de la tienda. Pregúntame sobre envíos, pagos o productos.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Escribe aquí..." onkeypress="handleChat(event)">
+                <button onclick="sendMessage()"><i class="ph ph-paper-plane-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="cart-header">
+            <h2>Tu Pedido</h2>
+            <button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button>
+        </div>
+        
+        <div class="shipping-progress-box">
+            <p id="shipping-msg">¡Faltan <strong>$50.000</strong> para envío gratis!</p>
+            <div class="progress-track"><div class="progress-fill" id="shipping-bar"></div></div>
+        </div>
+        
+        <div class="cart-items" id="cart-items"></div>
+        
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>Total:</span>
+                <span id="cart-total">$0</span>
+            </div>
+            <button class="whatsapp-btn" onclick="openCheckoutModal()">Ver Resumen y Confirmar</button>
+        </div>
+    </div>
+
+    <div class="checkout-overlay" id="checkout-overlay">
+        <div class="checkout-modal">
+            <div class="modal-header">
+                <h3>Resumen de Compra</h3>
+                <button onclick="closeCheckoutModal()"><i class="ph ph-x"></i></button>
+            </div>
+            
+            <div class="modal-body" id="modal-body"></div>
+            
+            <div class="coupon-section">
+                <input type="text" id="coupon-input" placeholder="Código (Ej: TIENDA10)">
+                <button onclick="applyCoupon()">Aplicar</button>
+            </div>
+            <div id="coupon-msg"></div>
+
+            <div class="modal-total">
+                <div id="modal-subtotal" style="display:none; font-size:0.9rem;">Sub: $0</div>
+                <div id="modal-discount" style="display:none; font-size:0.9rem; color:#2ecc71;">Desc: -$0</div>
+                <div style="margin-top:5px;">Total: <span id="modal-total-price">$0</span></div>
+            </div>
+            
+            <button class="confirm-btn" onclick="sendToWhatsApp()">
+                <i class="ph ph-whatsapp-logo"></i> Confirmar y Enviar
+            </button>
+        </div>
+    </div>
+
+    <div class="qv-overlay" id="qv-overlay" onclick="closeQuickView(event)">
+        <div class="qv-modal" onclick="event.stopPropagation()">
+            <button class="qv-close" onclick="closeQuickViewForce()"><i class="ph ph-x"></i></button>
+            
+            <div class="qv-image-col">
+                <img src="" id="qv-img" alt="Producto">
+            </div>
+            
+            <div class="qv-info-col">
+                <div class="qv-scroll-content">
+                    <div class="qv-tabs">
+                        <button class="qv-tab active" onclick="switchTab('details')">Detalles</button>
+                        <button class="qv-tab" onclick="switchTab('reviews')">Reseñas (<span id="qv-review-count">0</span>)</button>
+                    </div>
+
+                    <div id="tab-details" class="tab-content active">
+                        <div class="qv-category" id="qv-cat"></div>
+                        <h2 class="qv-title" id="qv-title"></h2>
+                        <div class="qv-stars" id="qv-stars-display"></div>
+                        
+                        <div class="qv-price-box" id="qv-price-box"></div>
+                        
+                        <div class="urgency-box">
+                            <p><i class="ph ph-eye"></i> <span id="qv-viewers">0</span> personas viendo.</p>
+                            <p class="stock-warning"><i class="ph ph-fire"></i> ¡Pocas unidades!</p>
+                        </div>
+                        
+                        <p class="qv-desc" id="qv-desc"></p>
+                        
+                        <button class="add-btn" id="qv-add-btn" style="margin-bottom:1.5rem;">
+                            <i class="ph ph-basket"></i> Agregar al Carrito
+                        </button>
+                        
+                        <div class="qv-related">
+                            <h4>También te podría gustar:</h4>
+                            <div class="qv-related-grid" id="qv-related-container"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-reviews" class="tab-content">
+                        <div id="reviews-list"></div>
+                        
+                        <div class="review-form">
+                            <h4>Dejar reseña</h4>
+                            <div class="star-rating-input">
+                                <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
+                                <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
+                                <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
+                                <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
+                                <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
+                            </div>
+                            <input type="text" id="review-name" placeholder="Tu nombre" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:5px;">
+                            <textarea id="review-text" rows="2" placeholder="Comentario..." style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:5px;"></textarea>
+                            <button class="hero-btn" onclick="submitReview()" style="font-size:0.8rem;padding:8px 15px;">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sales-notification" class="sales-notification">
+        <div class="sales-notification-img"><img src="" id="sales-img"></div>
+        <div class="sales-notification-content">
+            <p class="sales-text"><span id="sales-name">María</span> de <span id="sales-loc">Morón</span> compró:</p>
+            <h4 id="sales-product">Producto</h4>
+            <small id="sales-time">Hace 5 min</small>
+        </div>
+        <button class="sales-close" onclick="closeSalesNotification()">×</button>
+    </div>
+
+    <div class="promo-overlay" id="promo-overlay">
+        <div class="promo-modal">
+            <button class="promo-close" onclick="closePromo()">×</button>
+            <div class="promo-img">
+                <img src="https://images.unsplash.com/photo-1512413914633-b5043f4041ea?auto=format&fit=crop&w=500&q=80" alt="Promo">
+            </div>
+            <div class="promo-content">
+                <h3>¡Regalo de Bienvenida!</h3>
+                <p>Usa este cupón en tu primera compra.</p>
+                <div class="coupon-box">TIENDA10</div>
+                <button class="hero-btn" onclick="closePromo()" style="width:100%; margin-top:15px;">¡Lo quiero!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="js/components.js"></script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>

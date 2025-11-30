@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Tienda Pro</title>
+    <link rel="icon" type="image/png" href="logo/logo romina.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -13,18 +14,19 @@
     <div id="login-overlay">
         <div class="login-box">
             <h2>Admin Acceso</h2>
-            <p style="margin-bottom:1rem; font-size:0.9rem;">Contraseña: 1234</p>
-            <input type="password" id="admin-pass" placeholder="Contraseña">
-            <button class="submit-btn" onclick="checkLogin()">Entrar</button>
+            <p style="margin-bottom:1rem; font-size:0.9rem; color:#666;">Ingresa con tu cuenta de administrador</p>
+            
+            <input type="email" id="admin-email" placeholder="Email" style="margin-bottom:10px; width:100%; padding:10px;">
+            <input type="password" id="admin-pass" placeholder="Contraseña" style="margin-bottom:10px; width:100%; padding:10px;">
+            
+            <button class="submit-btn" onclick="login()">Entrar de forma segura</button>
         </div>
     </div>
 
-    <div class="admin-container">
-        
-        <div class="admin-header">
+    <div class="admin-container" id="admin-content" style="display:none;"> <div class="admin-header">
             <h1>Panel de Control</h1>
             <div style="display:flex; gap:10px;">
-                <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
+                <button onclick="logout()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">Cerrar Sesión</button>
                 <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
             </div>
         </div>

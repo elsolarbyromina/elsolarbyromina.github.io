@@ -44,11 +44,17 @@ let allProducts = [];       // Todos los productos cargados de Firebase
 let currentProducts = [];   // Productos filtrados actuales
 let categoriesData = [];    // Categorías cargadas de Firebase
 let activeCoupons = [];     // Cupones cargados de Firebase
-let cart = [];              // Carrito actual
+
+// -------------------------------------------------------------------------
+// CAMBIO 1: RECUPERAR DATOS AL INICIO
+// Intentamos leer 'cart' del navegador. Si no existe, usamos [] (vacío).
+// JSON.parse convierte el texto guardado de vuelta a un Array de JavaScript.
+// -------------------------------------------------------------------------
+let cart = JSON.parse(localStorage.getItem('cart')) || []; 
+
 let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 let discount = 0;
 let currentOpenProductId = null;
-// Las reseñas se mantienen locales para este ejemplo, pero podrían ir a Firebase
 let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
 
 // REFERENCIAS AL DOM
@@ -64,7 +70,7 @@ async function initStore() {
         const catSnap = await getDocs(collection(db, "categories"));
         categoriesData = [];
         catSnap.forEach(doc => categoriesData.push({id: doc.id, ...doc.data()}));
-        renderDynamicMenu(); // Dibujar menú una vez cargados los datos
+        renderDynamicMenu(); 
 
         // B. Cargar Cupones
         const coupSnap = await getDocs(collection(db, "coupons"));
@@ -76,7 +82,6 @@ async function initStore() {
         allProducts = [];
         prodSnap.forEach(doc => {
             const data = doc.data();
-            // Aseguramos que el precio sea número y guardamos el ID de Firebase
             allProducts.push({ 
                 firebaseId: doc.id, 
                 id: data.id, 
@@ -85,17 +90,19 @@ async function initStore() {
             });
         });
 
-        // Si no hay productos, mostrar mensaje o cargar defaults (opcional)
         if (allProducts.length === 0) {
             if(grid) grid.innerHTML = "<p style='text-align:center; padding:2rem;'>No hay productos cargados en la nube. Ve al Admin para agregar.</p>";
         } else {
-            // Mostrar todos los productos al inicio
             filterByMain('all');
         }
 
         // Iniciar funcionalidades extra
         initSlider();
         renderHistory();
+        
+        // CAMBIO 2: Actualizar la visual del carrito apenas carga la página
+        // (Por si recuperamos productos del LocalStorage)
+        updateCartUI(); 
         
         // Iniciar notificaciones y promo con retraso
         setTimeout(showSalesNotification, 10000);
@@ -124,29 +131,24 @@ function renderDynamicMenu() {
         const groupDiv = document.createElement('div');
         groupDiv.className = 'menu-group';
         
-        // Título de Categoría Principal
         const h3 = document.createElement('h3');
         h3.innerText = cat.name;
         h3.onclick = () => filterByMain(cat.id);
         groupDiv.appendChild(h3);
 
-        // Subcategorías
         const ul = document.createElement('ul');
         if(cat.subs) {
             cat.subs.forEach(sub => {
                 const li = document.createElement('li');
-                // Formatear texto (ej: kit-eco -> Kit Eco)
                 li.innerText = sub.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 li.onclick = () => filterBySub(cat.id, sub);
                 ul.appendChild(li);
             });
         }
         groupDiv.appendChild(ul);
-        
         menuContainer.appendChild(groupDiv);
     });
 
-    // Botón "Ver Todo" al final
     const btn = document.createElement('button');
     btn.className = 'ver-todo-btn';
     btn.innerText = 'Ver Todo';
@@ -158,7 +160,6 @@ function renderDynamicMenu() {
 // 5. FILTROS, BÚSQUEDA Y ORDENAMIENTO
 // =========================================
 
-// Filtrar por Categoría Principal
 function filterByMain(catId) {
     renderWithAnimation(() => {
         const filtered = catId === 'all' ? allProducts : allProducts.filter(p => p.category === catId);
@@ -174,7 +175,6 @@ function filterByMain(catId) {
     });
 }
 
-// Filtrar por Subcategoría
 function filterBySub(catId, subId) {
     renderWithAnimation(() => {
         const filtered = allProducts.filter(p => p.category === catId && p.sub === subId);
@@ -183,7 +183,6 @@ function filterBySub(catId, subId) {
     });
 }
 
-// Búsqueda por Texto
 function searchProducts(query) {
     const term = query.toLowerCase().trim();
     if(term === "") { filterByMain('all'); return; }
@@ -199,7 +198,6 @@ function searchProducts(query) {
     });
 }
 
-// Búsqueda por Voz
 function startVoiceSearch() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Tu navegador no soporta búsqueda por voz.");
@@ -231,7 +229,6 @@ function startVoiceSearch() {
     recognition.start();
 }
 
-// Ordenamiento
 function sortProducts(criteria) {
     let sorted = [...currentProducts];
     
@@ -241,12 +238,9 @@ function sortProducts(criteria) {
         case 'alpha-asc': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
         default: sorted.sort((a, b) => a.id - b.id); break;
     }
-    
-    // Renderizar sin animación para que sea rápido
     renderFiltered(sorted, false); 
 }
 
-// Cambiar Vistas (Grilla / Lista)
 function setGridView() {
     const container = document.getElementById('products-container');
     if(container) container.classList.remove('list-view');
@@ -277,7 +271,6 @@ function renderFiltered(list, animate = true) {
     if (!grid) return;
     currentProducts = list;
     
-    // Actualizar contador
     const countLabel = document.getElementById('product-count');
     if (countLabel) countLabel.innerText = list.length;
 
@@ -290,24 +283,19 @@ function renderFiltered(list, animate = true) {
     
     list.forEach(p => createProductCard(p));
     
-    // Activar animaciones Scroll Reveal
     if (animate) {
         observeRevealElements();
     } else {
-        // Si no animamos (ej: ordenar), mostrar directamente
         document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
     }
 }
 
 function createProductCard(p) {
-    // Etiquetas (Badges)
     let badgeHTML = p.badge ? `<span class="card-badge ${p.badge === 'Oferta' ? 'badge-offer' : 'badge-new'}">${p.badge}</span>` : '';
     
-    // Favoritos
     const isFav = wishlist.includes(p.id) ? 'active' : '';
     const heartIcon = wishlist.includes(p.id) ? 'ph-heart-fill' : 'ph-heart';
 
-    // Estrellas (Calculadas)
     const prodReviews = reviews[p.id] || [];
     let ratingHTML = '';
     if (prodReviews.length > 0) {
@@ -316,7 +304,6 @@ function createProductCard(p) {
         ratingHTML = `<div class="star-rating"><span class="star-gold">${stars}</span> <small>(${prodReviews.length})</small></div>`;
     }
 
-    // Precio (Lógica de tachado)
     let priceHTML = `<div class="card-price">$${p.price.toLocaleString()}</div>`;
     if(p.oldPrice && p.oldPrice > p.price) {
         const off = Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100);
@@ -326,14 +313,12 @@ function createProductCard(p) {
                 $${p.price.toLocaleString()}
             </div>
         `;
-        // Forzar badge de oferta si hay descuento real
         if(!p.badge) badgeHTML = `<span class="card-badge badge-offer">-${off}% OFF</span>`;
     }
 
     const card = document.createElement('div');
     card.className = 'card reveal';
     
-    // Comillas simples para IDs string de Firebase
     card.innerHTML = `
         <div class="card-img">
             ${badgeHTML}
@@ -362,7 +347,6 @@ function createProductCard(p) {
 // 7. CARRITO & WISHLIST
 // =========================================
 function toggleWishlist(id, btn) {
-    // Convertir ID a string para asegurar compatibilidad
     id = String(id);
     const idx = wishlist.indexOf(id);
     const icon = btn.querySelector('i');
@@ -376,11 +360,20 @@ function toggleWishlist(id, btn) {
         wishlist.splice(idx, 1);
         btn.classList.remove('active');
         icon.classList.replace('ph-heart-fill', 'ph-heart');
-        // Si estamos viendo la sección de favoritos, refrescar
         if(title && title.innerText.includes("Favoritos")) showFavorites();
     }
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
     setTimeout(() => btn.classList.remove('animating'), 500);
+}
+
+// -------------------------------------------------------------------------
+// CAMBIO 3: NUEVA FUNCIÓN PARA GUARDAR
+// Esta función guarda el estado actual del carrito en la "libreta" (LocalStorage)
+// JSON.stringify convierte el Array del carrito a Texto para poder guardarlo.
+// -------------------------------------------------------------------------
+function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartUI(); // También actualizamos la vista
 }
 
 function addToCart(id, btnElement = null) {
@@ -398,9 +391,9 @@ function addToCart(id, btnElement = null) {
         }
     }
     
-    updateCartUI();
+    // CAMBIO 4: Llamar a guardar después de modificar
+    saveCart();
     
-    // Animación de Vuelo
     if(btnElement) {
         const card = btnElement.closest('.card') || document.querySelector('.qv-image-col');
         const img = card ? card.querySelector('img') : null;
@@ -425,7 +418,6 @@ function flyToCart(imgSource) {
     
     document.body.appendChild(flyingImg);
     
-    // Forzar reflow
     void flyingImg.offsetWidth;
     
     const cartRect = cartBtn.getBoundingClientRect();
@@ -444,14 +436,14 @@ function changeQty(id, chg) {
     if(item) {
         item.qty += chg;
         if(item.qty <= 0) removeFromCart(id);
-        else updateCartUI();
+        else saveCart(); // CAMBIO 5: Llamar a guardar
     }
 }
 
 function removeFromCart(id) {
     id = String(id);
     cart = cart.filter(i => String(i.id) !== id);
-    updateCartUI();
+    saveCart(); // CAMBIO 6: Llamar a guardar
     showToast("Eliminado del carrito", "error");
 }
 
@@ -462,7 +454,7 @@ function updateCartUI() {
     const shipBar = document.getElementById('shipping-bar');
     const shipMsg = document.getElementById('shipping-msg');
     
-    if(!itemsEl) return; // Estamos en una página sin carrito
+    if(!itemsEl) return; 
     
     const totalQty = cart.reduce((a, b) => a + b.qty, 0);
     countEl.innerText = totalQty;
@@ -494,7 +486,6 @@ function updateCartUI() {
     
     totalEl.innerText = '$' + total.toLocaleString();
     
-    // Barra de Envío Gratis
     if(shipBar && shipMsg) {
         const percent = Math.min((total / ENVIO_GRATIS_META) * 100, 100);
         shipBar.style.width = percent + "%";
@@ -538,7 +529,6 @@ function openQuickView(id) {
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
-    // Precio con oferta
     const priceBox = document.getElementById('qv-price-box');
     let priceHtml = `<span class="current-price">$${p.price.toLocaleString()}</span>`;
     if(p.oldPrice && p.oldPrice > p.price) {
@@ -546,15 +536,13 @@ function openQuickView(id) {
         priceHtml = `<span class="old-price">$${p.oldPrice.toLocaleString()}</span> <span class="current-price">$${p.price.toLocaleString()}</span> <span class="discount-tag">-${off}% OFF</span>`;
     }
     if(priceBox) priceBox.innerHTML = priceHtml;
-    else document.getElementById('qv-price').innerHTML = priceHtml; // Fallback
+    else document.getElementById('qv-price').innerHTML = priceHtml; 
 
     document.getElementById('qv-desc').innerText = p.desc || "Producto artesanal exclusivo.";
     
-    // Urgencia (Fake)
     const viewers = Math.floor(Math.random() * 20) + 5;
     if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
     
-    // Estrellas
     const prodReviews = reviews[id] || [];
     let starsHTML = "";
     if(prodReviews.length > 0) {
@@ -563,13 +551,11 @@ function openQuickView(id) {
     } else { starsHTML = "<small>Sin opiniones aún</small>"; }
     document.getElementById('qv-stars-display').innerHTML = starsHTML;
 
-    // Botón Agregar
     document.getElementById('qv-add-btn').onclick = function() { 
         addToCart(p.id, this); 
         closeQuickViewForce(); 
     };
 
-    // Productos Relacionados
     const relatedContainer = document.getElementById('qv-related-container');
     if(relatedContainer) {
         relatedContainer.innerHTML = '';
@@ -587,7 +573,6 @@ function openQuickView(id) {
         }
     }
 
-    // Inicializar Pestañas
     switchTab('details');
     renderReviews(id);
     
@@ -656,7 +641,7 @@ function submitReview() {
     
     renderReviews(currentOpenProductId);
     showToast("¡Gracias por tu opinión!");
-    if(grid) renderFiltered(currentProducts); // Actualizar estrellas en grilla
+    if(grid) renderFiltered(currentProducts); 
 }
 
 // =========================================
@@ -847,7 +832,6 @@ function showSalesNotification() {
     const pImg = allProducts[Math.floor(Math.random() * allProducts.length)].img;
 
     document.getElementById('sales-name').innerText = randomSale.name;
-    document.getElementById('sales-loc').innerText = randomSale.loc;
     document.getElementById('sales-product').innerText = randomSale.prod;
     document.getElementById('sales-time').innerText = `Hace ${randomTime} min`;
     document.getElementById('sales-img').src = pImg;
@@ -910,6 +894,23 @@ function observeRevealElements() {
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
+// HELPER: MOSTRAR TOAST (Faltaba definir esta función en script.js, aunque se usaba)
+function showToast(msg, type="success") {
+    const container = document.getElementById('toast-container');
+    if(!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="ph ${type === 'success' ? 'ph-check-circle' : 'ph-x-circle'}"></i> ${msg}`;
+    toast.style.animation = 'toastIn 0.3s forwards';
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => { 
+        toast.style.animation = 'toastOut 0.3s forwards'; 
+        setTimeout(() => toast.remove(), 300); 
+    }, 3000);
+}
+
 // INICIALIZACIÓN FINAL
-// Llamamos a la función que conecta con Firebase y arranca todo
 initStore();
