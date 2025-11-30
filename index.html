@@ -278,6 +278,58 @@
 
     <div id="toast-container"></div>
 
+    <button id="scrollTopBtn" title="Volver arriba" style="
+        display: none; /* Oculto por defecto */
+        position: fixed;
+        bottom: 90px; /* Arriba del chat de WhatsApp */
+        right: 20px;
+        z-index: 99;
+        border: none;
+        outline: none;
+        background-color: var(--primary); /* Usa tu color violeta */
+        color: white;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transition: 0.3s;
+        align-items: center;
+        justify-content: center;
+    ">
+        <i class="ph ph-arrow-up"></i>
+    </button>
+
+    <script>
+        // Lógica aislada para el botón de subir
+        const scrollBtn = document.getElementById("scrollTopBtn");
+
+        window.onscroll = function() {
+            // Si baja más de 300px, mostrar botón
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollBtn.style.display = "flex";
+            } else {
+                scrollBtn.style.display = "none";
+            }
+        };
+
+        // Al hacer clic, subir suavemente
+        scrollBtn.onclick = function() {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+    </script>
+    ```
+
+### ¿Qué hace esto?
+1.  Crea un botón redondo violeta con una flecha hacia arriba.
+2.  Lo coloca flotando a la derecha (justo encima de tus otros botones para que no se encimen).
+3.  **Inteligencia:** El botón está oculto al principio. Solo aparece mágicamente cuando el usuario baja (hace scroll) para ver los productos.
+4.  Al tocarlo, la página sube suavemente (*smooth scroll*) al inicio.
+
+¡Es una mejora de "Experiencia de Usuario" (UX) que hace que tu tienda se sienta mucho más moderna y cómoda en celulares!
+
     <script src="js/components.js"></script>
     <script type="module" src="js/script.js"></script>
 </body>
