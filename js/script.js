@@ -32,6 +32,7 @@ window.handleChat = handleChat;
 window.sendMessage = sendMessage;
 window.startVoiceSearch = startVoiceSearch;
 window.goToSlide = goToSlide;
+window.updateCheckoutRules = updateCheckoutRules; // Reglas del Checkout
 
 // CONSTANTES GLOBALES
 const NUMERO_WHATSAPP = "5491100000000"; 
@@ -50,6 +51,9 @@ let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 let discount = 0;
 let currentOpenProductId = null;
 let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
+
+// MEMORIA DE STOCK
+let stockMemory = JSON.parse(localStorage.getItem('stock_memory')) || {};
 
 const grid = document.getElementById('products-container');
 const title = document.getElementById('current-section-title');
@@ -90,9 +94,8 @@ async function initStore() {
         renderHistory();
         updateCartUI(); 
         
-        // ACTIVAR EL BUSCADOR PREDICTIVO (NUEVA FUNCIÓN)
+        // Activar funciones Pro
         setTimeout(setupLiveSearch, 1000); 
-
         setTimeout(showSalesNotification, 10000);
         setTimeout(() => { 
             if(!sessionStorage.getItem('promoShown') && document.getElementById('promo-overlay')) {
@@ -114,30 +117,10 @@ function setupLiveSearch() {
     
     if (!searchInput || !searchBox) return;
 
-    // 1. Inyectar estilos CSS para el desplegable (Para no tocar style.css)
     const style = document.createElement('style');
     style.innerHTML = `
-        .live-search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 250px;
-            background: var(--bg-card);
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 5000;
-            overflow: hidden;
-            display: none;
-            border: 1px solid var(--border-color);
-        }
-        .live-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-            transition: 0.2s;
-        }
+        .live-search-results { position: absolute; top: 100%; left: 0; width: 250px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5000; overflow: hidden; display: none; border: 1px solid var(--border-color); }
+        .live-item { display: flex; align-items: center; padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
         .live-item:hover { background: var(--input-bg); }
         .live-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; margin-right: 10px; }
         .live-info h4 { font-size: 0.85rem; margin: 0; color: var(--text-main); }
@@ -145,58 +128,31 @@ function setupLiveSearch() {
     `;
     document.head.appendChild(style);
 
-    // 2. Crear el contenedor de resultados
     const resultsContainer = document.createElement('div');
     resultsContainer.className = 'live-search-results';
-    searchBox.style.position = 'relative'; // Necesario para que flote bien
+    searchBox.style.position = 'relative'; 
     searchBox.appendChild(resultsContainer);
 
-    // 3. Escuchar lo que escribe el usuario
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase().trim();
-        
-        if (term.length < 2) {
-            resultsContainer.style.display = 'none';
-            return;
-        }
+        if (term.length < 2) { resultsContainer.style.display = 'none'; return; }
 
-        // Filtrar productos (Máximo 5 resultados para no llenar la pantalla)
-        const matches = allProducts.filter(p => 
-            p.name.toLowerCase().includes(term) || 
-            (p.category && p.category.toLowerCase().includes(term))
-        ).slice(0, 5);
+        const matches = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.toLowerCase().includes(term))).slice(0, 5);
 
         if (matches.length > 0) {
             resultsContainer.innerHTML = '';
             matches.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'live-item';
-                div.onclick = () => {
-                    openQuickView(p.id); // Al hacer clic, abre el producto
-                    resultsContainer.style.display = 'none';
-                    searchInput.value = ''; // Limpia el buscador
-                };
-                div.innerHTML = `
-                    <img src="${p.img}" onerror="this.src='https://placehold.co/50'">
-                    <div class="live-info">
-                        <h4>${p.name}</h4>
-                        <span>$${p.price.toLocaleString()}</span>
-                    </div>
-                `;
+                div.onclick = () => { openQuickView(p.id); resultsContainer.style.display = 'none'; searchInput.value = ''; };
+                div.innerHTML = `<img src="${p.img}" onerror="this.src='https://placehold.co/50'"><div class="live-info"><h4>${p.name}</h4><span>$${p.price.toLocaleString()}</span></div>`;
                 resultsContainer.appendChild(div);
             });
             resultsContainer.style.display = 'block';
-        } else {
-            resultsContainer.style.display = 'none';
-        }
+        } else { resultsContainer.style.display = 'none'; }
     });
 
-    // Ocultar si hace clic fuera
-    document.addEventListener('click', (e) => {
-        if (!searchBox.contains(e.target)) {
-            resultsContainer.style.display = 'none';
-        }
-    });
+    document.addEventListener('click', (e) => { if (!searchBox.contains(e.target)) { resultsContainer.style.display = 'none'; } });
 }
 
 // =========================================
@@ -266,11 +222,7 @@ function searchProducts(query) {
     const term = query.toLowerCase().trim();
     if(term === "") { filterByMain('all'); return; }
     renderWithAnimation(() => {
-        const results = allProducts.filter(p => 
-            p.name.toLowerCase().includes(term) || 
-            (p.category && p.category.includes(term)) ||
-            (p.sub && p.sub.includes(term))
-        );
+        const results = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.includes(term)) || (p.sub && p.sub.includes(term)));
         renderFiltered(results);
         if(title) title.innerText = `Resultados: "${term}"`;
     });
@@ -334,6 +286,12 @@ function createProductCard(p) {
         priceHTML = `<div class="card-price"><span class="old-price">$${p.oldPrice.toLocaleString()}</span> $${p.price.toLocaleString()}</div>`;
         if(!p.badge) badgeHTML = `<span class="card-badge badge-offer">-${off}% OFF</span>`;
     }
+
+    let freeShipHTML = "";
+    if (p.price >= ENVIO_GRATIS_META) {
+        freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>';
+    }
+
     const card = document.createElement('div');
     card.className = 'card reveal';
     card.innerHTML = `
@@ -348,6 +306,7 @@ function createProductCard(p) {
             <div class="card-title">${p.name}</div>
             ${ratingHTML}
             ${priceHTML}
+            ${freeShipHTML}
             <button class="add-btn" onclick="window.addToCart('${p.id}', this)"><i class="ph ph-basket"></i> Agregar</button>
         </div>`;
     grid.appendChild(card);
@@ -414,7 +373,26 @@ function updateCartUI() {
     let total = 0;
     itemsEl.innerHTML = '';
     if(cart.length === 0) { itemsEl.innerHTML = '<p style="text-align:center;color:#999;margin-top:2rem;">Tu carrito está vacío.</p>'; } 
-    else { cart.forEach(item => { total += item.price * item.qty; itemsEl.innerHTML += `<div class="cart-item"><div class="item-info"><h4>${item.name}</h4><small>$${item.price.toLocaleString()}</small></div><div class="item-controls"><button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button><span>${item.qty}</span><button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button><button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;">×</button></div></div>`; }); }
+    else { 
+        cart.forEach(item => { 
+            total += item.price * item.qty; 
+            itemsEl.innerHTML += `
+            <div class="cart-item">
+                <div class="item-info">
+                    <h4>${item.name}</h4>
+                    <small>$${item.price.toLocaleString()}</small>
+                </div>
+                <div class="item-controls">
+                    <button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button>
+                    <span>${item.qty}</span>
+                    <button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button>
+                    <button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;font-size:1.2rem;">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                </div>
+            </div>`; 
+        }); 
+    }
     totalEl.innerText = '$' + total.toLocaleString();
     if(shipBar && shipMsg) {
         const percent = Math.min((total / ENVIO_GRATIS_META) * 100, 100);
@@ -427,7 +405,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (QUICK VIEW)
+// 8. VISTA RÁPIDA (FULL: ZOOM + PAGOS + STOCK MEMORY + COMPARTIR)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -436,11 +414,35 @@ function openQuickView(id) {
     currentOpenProductId = id;
     addToHistory(id);
     
-    document.getElementById('qv-img').src = p.img;
+    // ZOOM
+    const imgContainer = document.querySelector('.qv-image-col');
+    const img = document.getElementById('qv-img');
+    img.src = p.img;
+    imgContainer.style.overflow = "hidden";
+    imgContainer.style.cursor = "crosshair"; 
+    img.style.transition = "transform 0.2s ease-out"; 
+    imgContainer.onmousemove = function(e) {
+        const { left, top, width, height } = imgContainer.getBoundingClientRect();
+        const x = e.clientX - left;
+        const y = e.clientY - top;
+        const xPercent = (x / width) * 100;
+        const yPercent = (y / height) * 100;
+        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+        img.style.transform = "scale(2.5)"; 
+    };
+    imgContainer.onmouseleave = function() {
+        img.style.transformOrigin = "center center";
+        img.style.transform = "scale(1)";
+    };
+
     const catObj = categoriesData.find(c => c.id === p.category);
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
+    // URGENCIA: Personas viendo (INCLUIDO AHORA)
+    const viewers = Math.floor(Math.random() * 20) + 5;
+    if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
+
     const priceBox = document.getElementById('qv-price-box');
     let priceHtml = `<span class="current-price">$${p.price.toLocaleString()}</span>`;
     if(p.oldPrice && p.oldPrice > p.price) {
@@ -450,12 +452,62 @@ function openQuickView(id) {
     if(priceBox) priceBox.innerHTML = priceHtml;
     else document.getElementById('qv-price').innerHTML = priceHtml; 
 
+    // CALCULADORA DE PAGOS
+    let paymentInfo = document.getElementById('qv-payment-info');
+    if(paymentInfo) paymentInfo.remove(); 
+    paymentInfo = document.createElement('div');
+    paymentInfo.id = 'qv-payment-info';
+    paymentInfo.style.cssText = "background: rgba(108, 92, 231, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--primary); display: flex; flex-direction: column; gap: 8px;";
+    const cashPrice = (p.price * 0.9).toLocaleString('es-AR'); 
+    const quote3 = (p.price / 3).toLocaleString('es-AR', {maximumFractionDigits: 2}); 
+    paymentInfo.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="ph ph-bank" style="color:var(--primary); font-size:1.4rem;"></i>
+            <span style="font-size:0.9rem; color:var(--text-main);">
+                Transferencia (-10%): <strong style="color:#27ae60;">$${cashPrice}</strong>
+            </span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="ph ph-credit-card" style="color:var(--primary); font-size:1.4rem;"></i>
+            <span style="font-size:0.9rem; color:var(--text-main);">
+                3 Cuotas de: <strong>$${quote3}</strong>
+            </span>
+        </div>
+    `;
+    if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
+
+    // ALERTA STOCK (MÍNIMO 1)
+    let stockAlert = document.getElementById('qv-stock-alert');
+    if(stockAlert) stockAlert.remove(); 
+    let currentStock = 0;
+    if (stockMemory[id]) {
+        if (stockMemory[id] > 1) { stockMemory[id]--; } 
+        currentStock = stockMemory[id];
+    } else {
+        currentStock = Math.floor(Math.random() * 6) + 5;
+    }
+    stockMemory[id] = currentStock;
+    localStorage.setItem('stock_memory', JSON.stringify(stockMemory));
+
+    stockAlert = document.createElement('div');
+    stockAlert.id = 'qv-stock-alert';
+    stockAlert.style.marginBottom = "15px";
+    stockAlert.innerHTML = `
+        <p style="font-size: 0.85rem; color: #e17055; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
+            <i class="ph ph-fire"></i> ¡Date prisa! Solo quedan ${currentStock} unidades
+        </p>
+        <div style="width: 100%; background: #dfe6e9; height: 6px; border-radius: 3px; overflow: hidden;">
+            <div style="width: ${currentStock * 10}%; background: #e17055; height: 100%;"></div>
+        </div>
+    `;
+
     document.getElementById('qv-desc').innerText = p.desc || "Producto artesanal exclusivo.";
     
     const addBtn = document.getElementById('qv-add-btn');
+    addBtn.parentNode.insertBefore(stockAlert, addBtn);
     addBtn.onclick = function() { addToCart(p.id, this); closeQuickViewForce(); };
 
-    // --- BOTÓN COMPARTIR ---
+    // Botón Compartir
     let shareBtn = document.getElementById('qv-share-btn');
     if (!shareBtn) {
         shareBtn = document.createElement('button');
@@ -529,51 +581,215 @@ function submitReview() {
 }
 
 // =========================================
-// 9. CHECKOUT Y EXTRAS
+// 9. CHECKOUT INTELIGENTE (SMART CHECKOUT FORM)
 // =========================================
 function openCheckoutModal() {
     if(cart.length === 0) { showToast("Carrito vacío", "error"); return; }
     toggleCart(false);
-    discount = 0;
+    discount = 0; // Reset descuento
     document.getElementById('coupon-input').value = '';
     document.getElementById('coupon-msg').innerText = '';
-    document.getElementById('modal-subtotal').style.display = 'none';
+    
+    // Preparar el modal para mostrar inputs
+    document.getElementById('modal-subtotal').style.display = 'block'; 
     document.getElementById('modal-discount').style.display = 'none';
+    
     renderCheckoutItems();
     document.getElementById('checkout-overlay').classList.add('active');
 }
+
 function renderCheckoutItems() {
     const body = document.getElementById('modal-body');
-    let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-    let html = '';
-    cart.forEach(i => { html += `<div class="summary-item"><span>${i.qty}x ${i.name}</span><strong>$${(i.price * i.qty).toLocaleString()}</strong></div>`; });
-    body.innerHTML = html;
-    const total = subtotal - discount;
-    if(discount > 0) {
-        document.getElementById('modal-subtotal').style.display = 'block';
-        document.getElementById('modal-subtotal').innerText = `Subtotal: $${subtotal.toLocaleString()}`;
-        document.getElementById('modal-discount').style.display = 'block';
-        document.getElementById('modal-discount').innerText = `Descuento: -$${discount.toLocaleString()}`;
+    // Generamos el HTML del formulario DE UNA SOLA VEZ
+    // Incluye inputs para Nombre, Teléfono, Entrega y Pago
+    body.innerHTML = `
+        <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+            <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">1. Forma de Pago:</label>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+                <label style="border:1px solid #ddd;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
+                    <input type="radio" name="payment" value="transfer" checked onchange="updateCheckoutRules()"> Transferencia / MercadoPago
+                </label>
+                <label style="border:1px solid #ddd;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
+                    <input type="radio" name="payment" value="cash" onchange="updateCheckoutRules()"> Efectivo <strong style="color:#27ae60;">(10% OFF)</strong>
+                </label>
+            </div>
+        </div>
+
+        <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+            <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">2. Método de Entrega:</label>
+            <div style="display:flex;gap:10px;">
+                <label id="lbl-retiro" style="flex:1;border:1px solid #ddd;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
+                    <input type="radio" name="delivery" value="retiro" checked onchange="updateCheckoutRules()"> Retiro (Gratis)
+                </label>
+                <label id="lbl-envio" style="flex:1;border:1px solid #ddd;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
+                    <input type="radio" name="delivery" value="envio" onchange="updateCheckoutRules()"> Envío a Domicilio
+                </label>
+            </div>
+            
+            <div id="address-container" style="display:none; margin-top:10px; background: #f8f9fa; padding:10px; border-radius:6px;">
+                <label style="display:block;font-size:0.8rem;margin-bottom:3px;">Dirección de Entrega:</label>
+                <input type="text" id="client-address" placeholder="Calle, Altura, Localidad..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
+                <p style="font-size:0.75rem; color:#636e72; line-height:1.3;">
+                    <i class="ph ph-info"></i> <strong>Importante:</strong> En Haedo el envío es GRATIS. Resto de zonas sujeto a tarifa de Correo Andreani (se confirma por WhatsApp).
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">3. Tus Datos:</label>
+            <input type="text" id="client-name" placeholder="Tu Nombre" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:10px;">
+            <input type="tel" id="client-phone" placeholder="Tu Celular (Para coordinar)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <label style="display:block;font-size:0.85rem;margin-bottom:5px;">Notas / Aclaraciones:</label>
+            <textarea id="client-notes" placeholder="Ej: Es para regalo, no funciona el timbre..." rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;"></textarea>
+        </div>
+
+        <div style="border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
+            <h4 style="font-size:0.9rem;margin-bottom:5px;">Productos:</h4>
+            <div style="max-height: 120px; overflow-y: auto; padding-right: 5px; border: 1px solid #eee; border-radius: 6px; padding: 5px;">
+                ${cart.map(i => `<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:3px;"><span>${i.qty}x ${i.name}</span><span>$${(i.price*i.qty).toLocaleString()}</span></div>`).join('')}
+            </div>
+        </div>
+    `;
+    
+    updateCheckoutRules(); // Inicializar estado
+}
+
+// --- FUNCIÓN MAESTRA DE REGLAS (NUEVO) ---
+function updateCheckoutRules() {
+    // 1. Obtener valores
+    const payment = document.querySelector('input[name="payment"]:checked').value;
+    const deliveryRadios = document.getElementsByName('delivery');
+    const lblEnvio = document.getElementById('lbl-envio');
+    const addressContainer = document.getElementById('address-container');
+
+    // REGLA: Si es Efectivo, NO hay envío (solo retiro)
+    if (payment === 'cash') {
+        // Seleccionar Retiro forzosamente
+        deliveryRadios[0].checked = true; // Index 0 es retiro
+        // Deshabilitar Envío
+        deliveryRadios[1].disabled = true;
+        lblEnvio.style.opacity = '0.5';
+        lblEnvio.style.pointerEvents = 'none';
+        lblEnvio.title = "Envío solo disponible con Transferencia";
+    } else {
+        // Habilitar Envío
+        deliveryRadios[1].disabled = false;
+        lblEnvio.style.opacity = '1';
+        lblEnvio.style.pointerEvents = 'auto';
+        lblEnvio.title = "";
     }
+
+    // REGLA: Mostrar Dirección solo si eligió Envío
+    // Volvemos a leer el valor de delivery porque pudo haber cambiado arriba
+    const delivery = document.querySelector('input[name="delivery"]:checked').value;
+    if (delivery === 'envio') {
+        addressContainer.style.display = 'block';
+    } else {
+        addressContainer.style.display = 'none';
+    }
+
+    // Finalmente, recalcular totales (por el descuento de efectivo)
+    updateCheckoutTotal();
+}
+
+function updateCheckoutTotal() {
+    let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+    let total = subtotal;
+    let paymentDisc = 0;
+
+    // Verificar si hay cupón aplicado
+    if (discount > 0) {
+        total -= discount;
+    }
+
+    // Verificar si eligió Efectivo (10% descuento EXTRA)
+    const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
+    if (paymentMethod === 'cash') {
+        paymentDisc = total * 0.10; // 10% del total actual
+        total -= paymentDisc;
+    }
+
+    // Actualizar UI
+    document.getElementById('modal-subtotal').innerText = `Subtotal: $${subtotal.toLocaleString()}`;
+    
+    const discElem = document.getElementById('modal-discount');
+    // Mostrar descuentos acumulados (Cupón + Efectivo)
+    const totalDiscount = discount + paymentDisc;
+    
+    if (totalDiscount > 0) {
+        discElem.style.display = 'block';
+        discElem.innerText = `Descuento Total: -$${totalDiscount.toLocaleString()}`;
+    } else {
+        discElem.style.display = 'none';
+    }
+
     document.getElementById('modal-total-price').innerText = '$' + total.toLocaleString();
 }
+
 function applyCoupon() {
     const code = document.getElementById('coupon-input').value.toUpperCase().trim();
     const msg = document.getElementById('coupon-msg');
     let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+
     const found = activeCoupons.find(c => c.code === code);
-    if (found) { discount = subtotal * found.discount; msg.style.color = "#2ecc71"; msg.innerText = `¡Cupón aplicado! ${found.discount * 100}% OFF`; renderCheckoutItems(); } 
-    else { discount = 0; msg.style.color = "#e74c3c"; msg.innerText = "Cupón inválido"; renderCheckoutItems(); }
+    if (found) {
+        discount = subtotal * found.discount;
+        msg.style.color = "#2ecc71";
+        msg.innerText = `¡Cupón aplicado! ${found.discount * 100}% OFF`;
+    } else {
+        discount = 0;
+        msg.style.color = "#e74c3c";
+        msg.innerText = "Cupón inválido";
+    }
+    updateCheckoutRules(); // Usar la función maestra
 }
+
 function closeCheckoutModal() { document.getElementById('checkout-overlay').classList.remove('active'); toggleCart(true); }
+
 function sendToWhatsApp() {
-    let msg = "Hola! 👋 Quiero confirmar mi pedido:\n\n";
-    let subtotal = 0;
-    cart.forEach(i => { let s = i.price * i.qty; subtotal += s; msg += `▪️ ${i.qty}x ${i.name} - $${s.toLocaleString()}\n`; });
-    if (discount > 0) { msg += `\nSubtotal: $${subtotal.toLocaleString()}\nDescuento: -$${discount.toLocaleString()}`; }
-    msg += `\n💰 *Total Final: $${(subtotal - discount).toLocaleString()}*\n\nCoordino pago y entrega.`;
+    const name = document.getElementById('client-name').value || "Cliente";
+    const phone = document.getElementById('client-phone').value || "Sin especificar";
+    const notes = document.getElementById('client-notes').value || "Ninguna";
+    
+    const deliveryVal = document.querySelector('input[name="delivery"]:checked').value;
+    let deliveryText = "Retiro por Local";
+    let addressText = "";
+
+    // Si es envío, capturamos la dirección
+    if (deliveryVal === 'envio') {
+        const addressInput = document.getElementById('client-address').value;
+        deliveryText = "Envío a Domicilio";
+        addressText = `\n📍 *Dirección:* ${addressInput || 'A coordinar'}`;
+    }
+
+    const paymentVal = document.querySelector('input[name="payment"]:checked').value;
+    const paymentText = paymentVal === "cash" ? "Efectivo (10% OFF)" : "Transferencia / MP";
+    
+    // Obtener el total final calculado
+    const finalTotal = document.getElementById('modal-total-price').innerText;
+
+    let msg = `Hola! 👋 Soy *${name}*.\nQuiero confirmar mi pedido:\n\n`;
+    
+    cart.forEach(i => { 
+        msg += `▪️ ${i.qty}x ${i.name}\n`; 
+    });
+    
+    msg += `\n📞 *Teléfono:* ${phone}`;
+    msg += `\n📦 *Entrega:* ${deliveryText}`;
+    if (addressText) msg += addressText; // Solo agregamos dirección si corresponde
+    msg += `\n💳 *Pago:* ${paymentText}`;
+    msg += `\n📝 *Notas:* ${notes}`;
+    msg += `\n\n💰 *TOTAL FINAL: ${finalTotal}*`;
+    
     window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
 }
+
+// =========================================
+// 10. EXTRAS (CHAT, HISTORIAL, NOTIFICACIONES)
+// =========================================
 function addToHistory(id) {
     id = String(id);
     let history = JSON.parse(localStorage.getItem('history')) || [];
