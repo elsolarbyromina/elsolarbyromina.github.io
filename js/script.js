@@ -45,15 +45,12 @@ let currentProducts = [];
 let categoriesData = [];    
 let activeCoupons = [];     
 
-// Recuperar carrito del LocalStorage
 let cart = JSON.parse(localStorage.getItem('cart')) || []; 
-
 let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 let discount = 0;
 let currentOpenProductId = null;
 let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
 
-// REFERENCIAS AL DOM
 const grid = document.getElementById('products-container');
 const title = document.getElementById('current-section-title');
 
@@ -84,7 +81,7 @@ async function initStore() {
         });
 
         if (allProducts.length === 0) {
-            if(grid) grid.innerHTML = "<p style='text-align:center; padding:2rem;'>No hay productos cargados en la nube. Ve al Admin para agregar.</p>";
+            if(grid) grid.innerHTML = "<p style='text-align:center; padding:2rem;'>No hay productos cargados.</p>";
         } else {
             filterByMain('all');
         }
@@ -93,6 +90,9 @@ async function initStore() {
         renderHistory();
         updateCartUI(); 
         
+        // ACTIVAR EL BUSCADOR PREDICTIVO (NUEVA FUNCIÓN)
+        setTimeout(setupLiveSearch, 1000); 
+
         setTimeout(showSalesNotification, 10000);
         setTimeout(() => { 
             if(!sessionStorage.getItem('promoShown') && document.getElementById('promo-overlay')) {
@@ -102,12 +102,105 @@ async function initStore() {
 
     } catch (error) {
         console.error("Error conectando a Firebase:", error);
-        if(grid) grid.innerHTML = '<p style="text-align:center; padding:2rem; color:red;">Error de conexión. Verifica tu archivo config.js o tu internet.</p>';
     }
 }
 
 // =========================================
-// 4. MENÚ LATERAL DINÁMICO
+// 4. FUNCIONALIDAD PRO: BUSCADOR PREDICTIVO
+// =========================================
+function setupLiveSearch() {
+    const searchInput = document.getElementById('search-input');
+    const searchBox = document.querySelector('.search-box');
+    
+    if (!searchInput || !searchBox) return;
+
+    // 1. Inyectar estilos CSS para el desplegable (Para no tocar style.css)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .live-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 250px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 5000;
+            overflow: hidden;
+            display: none;
+            border: 1px solid var(--border-color);
+        }
+        .live-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: 0.2s;
+        }
+        .live-item:hover { background: var(--input-bg); }
+        .live-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; margin-right: 10px; }
+        .live-info h4 { font-size: 0.85rem; margin: 0; color: var(--text-main); }
+        .live-info span { font-size: 0.8rem; font-weight: bold; color: var(--primary); }
+    `;
+    document.head.appendChild(style);
+
+    // 2. Crear el contenedor de resultados
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'live-search-results';
+    searchBox.style.position = 'relative'; // Necesario para que flote bien
+    searchBox.appendChild(resultsContainer);
+
+    // 3. Escuchar lo que escribe el usuario
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase().trim();
+        
+        if (term.length < 2) {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+
+        // Filtrar productos (Máximo 5 resultados para no llenar la pantalla)
+        const matches = allProducts.filter(p => 
+            p.name.toLowerCase().includes(term) || 
+            (p.category && p.category.toLowerCase().includes(term))
+        ).slice(0, 5);
+
+        if (matches.length > 0) {
+            resultsContainer.innerHTML = '';
+            matches.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'live-item';
+                div.onclick = () => {
+                    openQuickView(p.id); // Al hacer clic, abre el producto
+                    resultsContainer.style.display = 'none';
+                    searchInput.value = ''; // Limpia el buscador
+                };
+                div.innerHTML = `
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/50'">
+                    <div class="live-info">
+                        <h4>${p.name}</h4>
+                        <span>$${p.price.toLocaleString()}</span>
+                    </div>
+                `;
+                resultsContainer.appendChild(div);
+            });
+            resultsContainer.style.display = 'block';
+        } else {
+            resultsContainer.style.display = 'none';
+        }
+    });
+
+    // Ocultar si hace clic fuera
+    document.addEventListener('click', (e) => {
+        if (!searchBox.contains(e.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+}
+
+// =========================================
+// 5. MENÚ LATERAL Y FILTROS
 // =========================================
 function renderDynamicMenu() {
     const menuContainer = document.querySelector('.menu-scroll-content');
@@ -139,9 +232,6 @@ function renderDynamicMenu() {
     menuContainer.appendChild(btn);
 }
 
-// =========================================
-// 5. FILTROS Y BÚSQUEDA
-// =========================================
 function filterByMain(catId) {
     renderWithAnimation(() => {
         const filtered = catId === 'all' ? allProducts : allProducts.filter(p => p.category === catId);
@@ -337,7 +427,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (MODIFICADO CON COMPARTIR)
+// 8. VISTA RÁPIDA (QUICK VIEW)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -362,56 +452,25 @@ function openQuickView(id) {
 
     document.getElementById('qv-desc').innerText = p.desc || "Producto artesanal exclusivo.";
     
-    // Asignar función al botón de agregar
     const addBtn = document.getElementById('qv-add-btn');
-    addBtn.onclick = function() { 
-        addToCart(p.id, this); 
-        closeQuickViewForce(); 
-    };
+    addBtn.onclick = function() { addToCart(p.id, this); closeQuickViewForce(); };
 
-    // ----------------------------------------------------
-    // NUEVA FUNCIÓN: INYECTAR BOTÓN COMPARTIR DINÁMICAMENTE
-    // ----------------------------------------------------
+    // --- BOTÓN COMPARTIR ---
     let shareBtn = document.getElementById('qv-share-btn');
     if (!shareBtn) {
-        // Si no existe, lo creamos
         shareBtn = document.createElement('button');
         shareBtn.id = 'qv-share-btn';
-        // Estilo integrado para no tocar CSS
         shareBtn.style.cssText = "margin-left: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; transition: 0.3s;";
         shareBtn.innerHTML = '<i class="ph ph-share-network"></i>';
         shareBtn.title = "Compartir";
-        
-        // Efecto hover simple
         shareBtn.onmouseover = function() { this.style.background = "var(--input-bg)"; };
         shareBtn.onmouseout = function() { this.style.background = "var(--bg-card)"; };
-
-        // Lo insertamos justo después del botón de agregar
         addBtn.parentNode.insertBefore(shareBtn, addBtn.nextSibling);
     }
-
-    // Lógica del botón compartir
     shareBtn.onclick = async () => {
-        const shareData = {
-            title: p.name,
-            text: `¡Mira este ${p.name} de El Solar by Romina! Precio: $${p.price}`,
-            url: window.location.href // Comparte el link de la tienda
-        };
-
-        try {
-            // Intentar usar la API nativa del celular
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else {
-                // Fallback para PC: Copiar al portapapeles
-                navigator.clipboard.writeText(`${shareData.text} en: ${shareData.url}`);
-                showToast("¡Link copiado al portapapeles!");
-            }
-        } catch (err) {
-            console.log("Error al compartir:", err);
-        }
+        const shareData = { title: p.name, text: `Mira este ${p.name}!`, url: window.location.href };
+        try { if (navigator.share) { await navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} en: ${shareData.url}`); showToast("¡Link copiado!"); } } catch (err) { console.log(err); }
     };
-    // ----------------------------------------------------
 
     const relatedContainer = document.getElementById('qv-related-container');
     if(relatedContainer) {
