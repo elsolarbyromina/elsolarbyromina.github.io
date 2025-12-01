@@ -622,3 +622,49 @@ footer { background: #1e272e; color: white; padding: 4rem 5% 1rem; text-align: l
     .sales-notification { left: 10px; bottom: 80px; max-width: 280px; }
     .form-row { grid-template-columns: 1fr; }
 }
+
+/* =========================================
+   CORRECCIÓN RESPONSIVE (CELULAR)
+   ========================================= */
+@media (max-width: 768px) {
+    
+    /* 1. Ocultar el texto "El Solar by Romina" en celular */
+    /* Esto libera espacio para que entren el buscador y el menú */
+    .logo a span {
+        display: none !important;
+    }
+
+    /* 2. Ajustar el tamaño del logo imagen */
+    .logo img {
+        height: 35px !important; /* Un poco más chico para que no moleste */
+    }
+
+    /* 3. Asegurar que el botón del menú (Hamburguesa) se vea */
+    .mobile-menu-btn {
+        display: block !important;
+        margin-left: 10px;
+        font-size: 2rem; /* Más grande para el dedo */
+        cursor: pointer;
+        z-index: 2001; /* Asegura que esté por encima de todo */
+    }
+
+    /* 4. Ajustes del Header para que nada se corte */
+    header {
+        padding: 0 15px !important; /* Menos relleno a los costados */
+        justify-content: space-between !important;
+        overflow: visible !important; /* Permite que el menú se despliegue */
+    }
+
+    /* 5. Arreglar el buscador en celular para que no ocupe todo */
+    .search-box {
+        margin-right: 0;
+        max-width: 140px; /* Limitar ancho para que entre el resto */
+    }
+
+    /* 6. Fondo sólido para el menú desplegable */
+    .main-nav {
+        background-color: var(--bg-card) !important;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 20px;
+    }
+}

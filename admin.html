@@ -23,10 +23,15 @@
         </div>
     </div>
 
-    <div class="admin-container" id="admin-content" style="display:none;"> <div class="admin-header">
+    <div class="admin-container" id="admin-content" style="display:none;"> 
+        <div class="admin-header">
             <h1>Panel de Control</h1>
-            <div style="display:flex; gap:10px;">
-                <button onclick="logout()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">Cerrar Sesión</button>
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                <button onclick="exportToCSV()" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;">
+                    <i class="ph ph-microsoft-excel-logo"></i> Descargar Excel
+                </button>
+                
+                <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
                 <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
             </div>
         </div>

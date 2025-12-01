@@ -1,7 +1,7 @@
 // =========================================
 // 1. IMPORTACIONES Y CONFIGURACIÓN
 // =========================================
-import { db, storage, auth } from './config.js'; // Importamos AUTH
+import { db, storage, auth } from './config.js'; 
 import { 
     collection, addDoc, getDocs, deleteDoc, doc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -14,7 +14,7 @@ import {
     signInWithEmailAndPassword, 
     onAuthStateChanged,
     signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; // Funciones de Auth
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; 
 
 // =========================================
 // 2. EXPOSICIÓN DE FUNCIONES AL HTML
@@ -40,28 +40,29 @@ window.deleteProduct = deleteProduct;
 window.addCoupon = addCoupon;
 window.deleteCoupon = deleteCoupon;
 
+// Sistema y Utilidades
+window.resetStock = resetStock;
+window.exportToCSV = exportToCSV; // <--- NUEVO: Exportar a Excel
+
 // Variables Globales
 let categoriesCache = [];     
 let adminProductsCache = [];
 let imageFileToUpload = null; 
 
 // =========================================
-// 3. SISTEMA DE LOGIN SEGURO (NUEVO)
+// 3. SISTEMA DE LOGIN SEGURO
 // =========================================
 
-// Escuchamos si el usuario está logueado o no
 onAuthStateChanged(auth, (user) => {
     const overlay = document.getElementById('login-overlay');
     const content = document.getElementById('admin-content');
 
     if (user) {
-        // Si hay usuario (está logueado), mostramos el panel
         overlay.style.display = 'none';
         content.style.display = 'block';
         console.log("Usuario autenticado:", user.email);
-        initAdmin(); // Cargamos los datos
+        initAdmin(); 
     } else {
-        // Si NO hay usuario, mostramos el login
         overlay.style.display = 'flex';
         content.style.display = 'none';
     }
@@ -73,7 +74,6 @@ async function login() {
 
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        // No necesitamos hacer nada más, el "onAuthStateChanged" detectará el cambio y abrirá el panel
     } catch (error) {
         console.error(error);
         if(error.code === 'auth/invalid-credential') {
@@ -172,7 +172,6 @@ async function loadCategories() {
 
     } catch (e) {
         console.error("Error cargando categorías: ", e);
-        // alert("Error de conexión con Firebase al cargar categorías.");
     }
 }
 
@@ -432,4 +431,48 @@ async function deleteCoupon(docId) {
     if(!confirm("¿Borrar cupón?")) return;
     await deleteDoc(doc(db, "coupons", docId));
     loadCoupons();
+}
+
+// =========================================
+// 8. RESET DE FÁBRICA
+// =========================================
+function resetStock() {
+    if(confirm("⚠️ ¡PELIGRO! Esta función borraría toda tu base de datos en la nube. ¿Estás seguro de que quieres borrar TODO?")) {
+        alert("Por seguridad, el borrado masivo de la nube está desactivado en este script.");
+        location.reload();
+    }
+}
+
+// =========================================
+// 9. EXPORTAR A EXCEL (CSV) - FUNCIONALIDAD PRO
+// =========================================
+function exportToCSV() {
+    if (!adminProductsCache || adminProductsCache.length === 0) {
+        return alert("No hay productos para exportar.");
+    }
+
+    let csvContent = "ID,NOMBRE,CATEGORIA,SUBCATEGORIA,PRECIO,ETIQUETA\n";
+
+    adminProductsCache.forEach(p => {
+        const cleanName = p.name.replace(/,/g, " "); 
+        const cleanCat = p.category.replace(/,/g, " ");
+        const cleanSub = p.sub ? p.sub.replace(/,/g, " ") : "";
+        const badge = p.badge || "Normal";
+
+        csvContent += `${p.id},${cleanName},${cleanCat},${cleanSub},${p.price},${badge}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    
+    const date = new Date().toISOString().slice(0,10);
+    link.setAttribute("download", `inventario_elsolar_${date}.csv`);
+    
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
