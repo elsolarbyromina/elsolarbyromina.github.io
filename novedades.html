@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novedades | El Solar by Romina</title>
+    <link rel="icon" type="image/png" href="logo/logo romina.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="header-container"></div>
+
+    <section class="container reveal">
+        <div style="text-align: center; margin: 3rem 0;">
+            <h1 class="section-title">Novedades & Blog</h1>
+            <p class="section-subtitle">Enterate de nuestros nuevos lanzamientos, ferias y secretos del taller.</p>
+        </div>
+
+        <div class="blog-grid">
+            
+            <article class="blog-card">
+                <img src="logo/hay mas feria con logo.png" alt="Feria" class="blog-img">
+                <div class="blog-content">
+                    <span class="blog-date">📅 14 de Diciembre 2025</span>
+                    <h3 class="blog-title">¡Vamos a estar en la Feria "Hay más feria" en San Telmo!</h3>
+                    <p class="blog-text">Va a hacer un fin de semana hermoso compartiendo con ustedes. Los esperamos en el stand para ver las artesanias que hacemos con tanto amor para Ustedes. Ubicación Dejensa 535. CABA.</p>
+                    <a href="logo/hay mas feria con logo.png" class="read-more" target="_blank" rel="noopener noreferrer">Leer más <i class="ph ph-arrow-right"></i></a>
+                </div>
+            </article>
+
+            <article class="blog-card">
+                <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80" alt="Navidad" class="blog-img">
+                <div class="blog-content">
+                    <span class="blog-date">✨ Próximamente</span>
+                    <h3 class="blog-title">Colección Navideña 2025</h3>
+                    <p class="blog-text">Estamos preparando adornos únicos para tu arbolito. Colores dorados, materiales nobles y mucho brillo. ¡Atentos al lanzamiento!</p>
+                    <a href="#" class="read-more"><i class="ph ph-arrow-right"></i></a>
+                </div>
+            </article>
+
+            <article class="blog-card">
+                <img src="https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80" alt="Taller" class="blog-img">
+                <div class="blog-content">
+                    <span class="blog-date">🧶 Tips del Taller</span>
+                    <h3 class="blog-title">Cómo cuidar tus productos artesanales</h3>
+                    <p class="blog-text">Para que tus compras duren años, te recomendamos lavarlos con agua fría y no exponerlos al sol directo por mucho tiempo.</p>
+                    <a href="#" class="read-more"><i class="ph ph-arrow-right"></i></a>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <div id="footer-container"></div>
+
+    <a href="https://wa.me/5491100000000" target="_blank" class="float-wa" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
+    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="cart-header"><h2>Tu Pedido</h2><button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button></div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-footer"><div class="total-row"><span>Total:</span><span id="cart-total">$0</span></div><button class="whatsapp-btn" onclick="openCheckoutModal()">Confirmar</button></div>
+    </div>
+
+    <script src="js/components.js"></script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>

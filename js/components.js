@@ -35,6 +35,8 @@ function loadHeader() {
 
             <nav class="main-nav" id="main-nav">
                 <a href="index.html" class="nav-link">Inicio</a>
+                
+                <a href="novedades.html" class="nav-link">Novedades</a>
                 <a href="nosotros.html" class="nav-link">Nosotros</a>
                 <a href="contacto.html" class="nav-link">Contacto</a>
                 <a href="#" class="nav-link" onclick="if(typeof showFavorites === 'function') { showFavorites(); return false; }">Favoritos ❤️</a>
