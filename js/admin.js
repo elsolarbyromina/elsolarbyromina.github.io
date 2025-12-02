@@ -42,7 +42,11 @@ window.deleteCoupon = deleteCoupon;
 
 // Sistema y Utilidades
 window.resetStock = resetStock;
-window.exportToCSV = exportToCSV; // <--- NUEVO: Exportar a Excel
+window.exportToCSV = exportToCSV;
+
+// --- NUEVO: FUNCIONES DE IA ---
+window.toggleDescMode = toggleDescMode;
+window.generateAIDescription = generateAIDescription;
 
 // Variables Globales
 let categoriesCache = [];     
@@ -444,7 +448,7 @@ function resetStock() {
 }
 
 // =========================================
-// 9. EXPORTAR A EXCEL (CSV) - FUNCIONALIDAD PRO
+// 9. EXPORTAR A EXCEL (CSV)
 // =========================================
 function exportToCSV() {
     if (!adminProductsCache || adminProductsCache.length === 0) {
@@ -463,16 +467,84 @@ function exportToCSV() {
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    
     const date = new Date().toISOString().slice(0,10);
     link.setAttribute("download", `inventario_elsolar_${date}.csv`);
-    
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// =========================================
+// 10. GENERADOR DE DESCRIPCIONES CON IA
+// =========================================
+function toggleDescMode(mode) {
+    const btnManual = document.getElementById('btn-mode-manual');
+    const btnAi = document.getElementById('btn-mode-ai');
+    const btnGen = document.getElementById('btn-generate-ai');
+    const txtArea = document.getElementById('p-desc');
+
+    if (mode === 'manual') {
+        btnManual.style.background = "#e0e0e0";
+        btnManual.style.fontWeight = "bold";
+        btnAi.style.background = "white";
+        btnAi.style.fontWeight = "normal";
+        btnGen.style.display = "none";
+        txtArea.placeholder = "Escribe los detalles aquí...";
+        txtArea.readOnly = false;
+    } else {
+        btnManual.style.background = "white";
+        btnManual.style.fontWeight = "normal";
+        btnAi.style.background = "#fdcb6e"; 
+        btnAi.style.fontWeight = "bold";
+        btnGen.style.display = "flex";
+        txtArea.placeholder = "Presiona el botón mágico para generar...";
+    }
+}
+
+function generateAIDescription() {
+    const name = document.getElementById('p-name').value.trim();
+    const categoryId = document.getElementById('p-cat').value;
+    const sub = document.getElementById('p-sub').value;
+    const catSelect = document.getElementById('p-cat');
+    
+    // Check de seguridad
+    if (catSelect.selectedIndex === -1 || !categoryId) {
+        return alert("⚠️ Para que la IA funcione, primero escribe el Nombre del producto y elige una Categoría.");
+    }
+    const categoryName = catSelect.options[catSelect.selectedIndex].text;
+
+    if (!name) return alert("Escribe el nombre del producto primero.");
+
+    const textArea = document.getElementById('p-desc');
+    textArea.value = "🔮 La IA está pensando...";
+
+    const intros = ["Descubre la magia de", "Enamórate de", "Dale un toque único a tu vida con", "Renueva tu estilo con", "La pieza que estabas buscando:"];
+    const middles = [`este increíble diseño de ${categoryName}`, `esta creación artesanal de la línea ${sub || categoryName}`, `nuestro exclusivo modelo pensado para ti`, `una obra maestra hecha a mano`];
+    const emotions = ["que aporta calidez y distinción.", "creado con amor y dedicación en cada detalle.", "perfecto para regalar o darte un gusto especial.", "que combina funcionalidad y belleza artesanal.", "listo para transformar tus espacios."];
+    const callToAction = ["¡No te quedes sin el tuyo!", "Edición limitada, consíguelo hoy.", "El detalle que faltaba en tu hogar.", "Calidad premium garantizada."];
+
+    setTimeout(() => {
+        const intro = intros[Math.floor(Math.random() * intros.length)];
+        const middle = middles[Math.floor(Math.random() * middles.length)];
+        const emotion = emotions[Math.floor(Math.random() * emotions.length)];
+        const cta = callToAction[Math.floor(Math.random() * callToAction.length)];
+
+        const finalDescription = `${intro} ${name}. Se trata de ${middle} ${emotion} ${cta}`;
+
+        textArea.value = "";
+        let i = 0;
+        const speed = 30; 
+        function typeWriter() {
+            if (i < finalDescription.length) {
+                textArea.value += finalDescription.charAt(i);
+                i++;
+                setTimeout(typeWriter, speed);
+            }
+        }
+        typeWriter();
+    }, 800); 
 }

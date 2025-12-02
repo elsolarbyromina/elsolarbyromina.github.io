@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Tienda Pro</title>
     <link rel="icon" type="image/png" href="logo/logo romina.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -24,6 +25,7 @@
     </div>
 
     <div class="admin-container" id="admin-content" style="display:none;"> 
+        
         <div class="admin-header">
             <h1>Panel de Control</h1>
             <div style="display:flex; gap:10px; flex-wrap: wrap;">
@@ -32,6 +34,7 @@
                 </button>
                 
                 <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
+                <button onclick="logout()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">Cerrar Sesión</button>
                 <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
             </div>
         </div>
@@ -71,9 +74,7 @@
             <h3 id="form-title">➕ Agregar Producto</h3>
             <form id="add-product-form">
                 <input type="hidden" id="edit-id">
-                <input type="hidden" id="p-img-base64">
-
-                <div class="form-row">
+                <input type="hidden" id="p-img-base64"> <div class="form-row">
                     <div class="form-group">
                         <label>Nombre del Producto</label>
                         <input type="text" id="p-name" required placeholder="Ej: Taza de Café">
@@ -116,8 +117,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea id="p-desc" rows="2" placeholder="Detalles del producto..."></textarea>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <label>Descripción</label>
+                        <div class="ai-controls" style="display:flex; gap:5px;">
+                            <button type="button" onclick="toggleDescMode('manual')" id="btn-mode-manual" style="padding:4px 10px; border:1px solid #ccc; background:#e0e0e0; cursor:pointer; border-radius:15px; font-size:0.75rem; font-weight:bold;">✏️ Manual</button>
+                            <button type="button" onclick="toggleDescMode('ai')" id="btn-mode-ai" style="padding:4px 10px; border:1px solid #ccc; background:white; cursor:pointer; border-radius:15px; font-size:0.75rem;">✨ Crear con IA</button>
+                        </div>
+                    </div>
+                    
+                    <textarea id="p-desc" rows="3" placeholder="Detalles del producto..."></textarea>
+                    
+                    <button type="button" id="btn-generate-ai" onclick="generateAIDescription()" style="display:none; width:100%; margin-top:5px; background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="ph ph-magic-wand"></i> Generar Descripción Mágica
+                    </button>
                 </div>
 
                 <div class="form-group">
