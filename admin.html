@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Tienda Pro</title>
     <link rel="icon" type="image/png" href="logo/logo romina.png">
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -16,10 +15,8 @@
         <div class="login-box">
             <h2>Admin Acceso</h2>
             <p style="margin-bottom:1rem; font-size:0.9rem; color:#666;">Ingresa con tu cuenta de administrador</p>
-            
             <input type="email" id="admin-email" placeholder="Email" style="margin-bottom:10px; width:100%; padding:10px;">
             <input type="password" id="admin-pass" placeholder="Contraseña" style="margin-bottom:10px; width:100%; padding:10px;">
-            
             <button class="submit-btn" onclick="login()">Entrar de forma segura</button>
         </div>
     </div>
@@ -32,7 +29,6 @@
                 <button onclick="exportToCSV()" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;">
                     <i class="ph ph-microsoft-excel-logo"></i> Descargar Excel
                 </button>
-                
                 <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
                 <button onclick="logout()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">Cerrar Sesión</button>
                 <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
@@ -41,7 +37,6 @@
 
         <div class="admin-card">
             <h3>📂 Categorías y Subcategorías</h3>
-            
             <div class="form-row" style="align-items:flex-end;">
                 <div class="form-group">
                     <label>Nueva Categoría Principal</label>
@@ -49,9 +44,7 @@
                 </div>
                 <button onclick="addCategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Crear Cat.</button>
             </div>
-            
             <hr style="margin: 20px 0; border-color: var(--border-color); opacity: 0.3;">
-
             <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.02); border-radius: 10px;">
                 <h4 style="margin-bottom:10px; color: var(--text-main);">Agregar Subcategoría</h4>
                 <div class="form-row" style="align-items:flex-end;">
@@ -66,7 +59,6 @@
                     <button onclick="addSubcategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Agregar Sub</button>
                 </div>
             </div>
-
             <div id="categories-list" style="margin-top:20px;"></div>
         </div>
 
@@ -74,7 +66,9 @@
             <h3 id="form-title">➕ Agregar Producto</h3>
             <form id="add-product-form">
                 <input type="hidden" id="edit-id">
-                <input type="hidden" id="p-img-base64"> <div class="form-row">
+                <input type="hidden" id="p-img-base64">
+
+                <div class="form-row">
                     <div class="form-group">
                         <label>Nombre del Producto</label>
                         <input type="text" id="p-name" required placeholder="Ej: Taza de Café">
@@ -82,6 +76,11 @@
                     <div class="form-group">
                         <label>Precio</label>
                         <input type="number" id="p-price" required placeholder="Ej: 5000">
+                        
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: #eaffe3; padding: 8px; border-radius: 6px; border: 1px solid #b8e994;">
+                            <input type="checkbox" id="p-promo-cash" style="width: 20px; height: 20px; cursor: pointer;">
+                            <label for="p-promo-cash" style="margin:0; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #218c74;">✅ Habilitar 10% OFF en Efectivo</label>
+                        </div>
                     </div>
                 </div>
 
@@ -124,9 +123,7 @@
                             <button type="button" onclick="toggleDescMode('ai')" id="btn-mode-ai" style="padding:4px 10px; border:1px solid #ccc; background:white; cursor:pointer; border-radius:15px; font-size:0.75rem;">✨ Crear con IA</button>
                         </div>
                     </div>
-                    
                     <textarea id="p-desc" rows="3" placeholder="Detalles del producto..."></textarea>
-                    
                     <button type="button" id="btn-generate-ai" onclick="generateAIDescription()" style="display:none; width:100%; margin-top:5px; background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; align-items: center; justify-content: center; gap: 8px;">
                         <i class="ph ph-magic-wand"></i> Generar Descripción Mágica
                     </button>
@@ -150,8 +147,7 @@
 
         <div class="admin-card">
             <h3>📦 Inventario (<span id="total-products">0</span>)</h3>
-            <div class="admin-grid" id="admin-products-grid">
-                </div>
+            <div class="admin-grid" id="admin-products-grid"></div>
         </div>
 
         <div class="admin-card">
@@ -167,8 +163,7 @@
                 </div>
                 <button onclick="addCoupon()" class="submit-btn" style="margin-bottom: 1.5rem;">Crear Cupón</button>
             </div>
-            <div id="coupons-list">
-                </div>
+            <div id="coupons-list"></div>
         </div>
     </div>
 

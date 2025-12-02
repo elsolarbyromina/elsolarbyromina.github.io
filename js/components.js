@@ -1,10 +1,16 @@
 // js/components.js
 
 // =========================================
-// 1. CARGAR ENCABEZADO (HEADER)
+// 1. CARGAR ENCABEZADO (HEADER) CON TOP BAR
 // =========================================
 function loadHeader() {
     const headerHTML = `
+    <div class="top-bar">
+        <div class="top-bar-content" id="top-bar-text">
+            <span>✨ 10% OFF pagando en Efectivo</span>
+        </div>
+    </div>
+
     <header>
        <div class="logo">
             <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap: 10px;">
@@ -35,7 +41,6 @@ function loadHeader() {
 
             <nav class="main-nav" id="main-nav">
                 <a href="index.html" class="nav-link">Inicio</a>
-                
                 <a href="novedades.html" class="nav-link">Novedades</a>
                 <a href="nosotros.html" class="nav-link">Nosotros</a>
                 <a href="contacto.html" class="nav-link">Contacto</a>
@@ -60,15 +65,15 @@ function loadHeader() {
     if (headerContainer) {
         headerContainer.innerHTML = headerHTML;
         
-        // Una vez inyectado el HTML, aplicamos el tema guardado (si existe)
+        // Iniciar funcionalidades
         applySavedTheme();
+        initTopBar(); // Activar rotación de anuncios
     }
     
-    // Resaltar el enlace activo según la página actual
+    // Resaltar el enlace activo
     const currentPage = window.location.pathname.split("/").pop() || "index.html";
     const links = document.querySelectorAll('.nav-link');
     links.forEach(link => {
-        // Si el href del enlace coincide con la página actual, le agregamos la clase 'active'
         if(link.getAttribute('href') === currentPage) {
             link.classList.add('active');
         }
@@ -76,7 +81,35 @@ function loadHeader() {
 }
 
 // =========================================
-// 2. CARGAR PIE DE PÁGINA (FOOTER)
+// 2. LÓGICA DE LA BARRA DE ANUNCIOS (TOP BAR)
+// =========================================
+function initTopBar() {
+    const messages = [
+        "✨ 10% OFF pagando en Efectivo en articulos seleccionados",
+        "🚚 Envío Gratis superando los $150.000",
+        "📍 Retiro sin cargo por Haedo",
+        "💳 Transferencia o MercadoPago aceptados"
+    ];
+    
+    let currentIndex = 0;
+    const textElement = document.getElementById('top-bar-text');
+    
+    if(!textElement) return;
+
+    // Cambiar mensaje cada 4 segundos
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % messages.length;
+        // Efecto visual: desvanecer -> cambiar -> aparecer
+        textElement.style.opacity = '0';
+        setTimeout(() => {
+            textElement.innerHTML = `<span>${messages[currentIndex]}</span>`;
+            textElement.style.opacity = '1';
+        }, 500);
+    }, 4000); 
+}
+
+// =========================================
+// 3. CARGAR PIE DE PÁGINA (FOOTER)
 // =========================================
 function loadFooter() {
     const footerHTML = `
@@ -118,7 +151,6 @@ function loadFooter() {
     </footer>
     `;
     
-    // Inyectar el HTML en el contenedor del footer
     const footerContainer = document.getElementById('footer-container');
     if (footerContainer) {
         footerContainer.innerHTML = footerHTML;
@@ -126,7 +158,7 @@ function loadFooter() {
 }
 
 // =========================================
-// 3. FUNCIONALIDAD MENÚ MÓVIL
+// 4. FUNCIONALIDAD MENÚ MÓVIL
 // =========================================
 function toggleMobileMenu() {
     const nav = document.getElementById('main-nav');
@@ -136,21 +168,19 @@ function toggleMobileMenu() {
 }
 
 // =========================================
-// 4. FUNCIONALIDAD MODO OSCURO (DARK MODE)
+// 5. FUNCIONALIDAD MODO OSCURO (DARK MODE)
 // =========================================
 function toggleTheme() {
     const body = document.body;
     const icon = document.getElementById('theme-icon');
     
-    // Alternar la clase 'dark-mode' en el body
     body.classList.toggle('dark-mode');
     
-    // Cambiar el icono y guardar la preferencia
     if (body.classList.contains('dark-mode')) {
-        if(icon) icon.classList.replace('ph-moon', 'ph-sun'); // Cambia luna por sol
+        if(icon) icon.classList.replace('ph-moon', 'ph-sun'); 
         localStorage.setItem('theme', 'dark');
     } else {
-        if(icon) icon.classList.replace('ph-sun', 'ph-moon'); // Cambia sol por luna
+        if(icon) icon.classList.replace('ph-sun', 'ph-moon'); 
         localStorage.setItem('theme', 'light');
     }
 }
@@ -159,7 +189,6 @@ function applySavedTheme() {
     const theme = localStorage.getItem('theme');
     const icon = document.getElementById('theme-icon');
     
-    // Si el usuario tenía guardado 'dark', lo aplicamos al cargar
     if (theme === 'dark') {
         document.body.classList.add('dark-mode');
         if(icon) icon.classList.replace('ph-moon', 'ph-sun');
@@ -167,15 +196,12 @@ function applySavedTheme() {
 }
 
 // =========================================
-// 5. INICIALIZACIÓN
+// 6. INICIALIZACIÓN
 // =========================================
-// Ejecutar cuando el DOM esté completamente cargado
 document.addEventListener("DOMContentLoaded", () => {
     loadHeader();
     loadFooter();
     
-    // Intentar actualizar el numerito del carrito si la lógica principal ya cargó
-    // Esto evita que muestre 0 si recargas la página y ya tenías cosas en el carrito
     if(typeof updateCartUI === 'function' && typeof cart !== 'undefined') {
         updateCartUI();
     }

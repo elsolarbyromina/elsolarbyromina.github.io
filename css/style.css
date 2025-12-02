@@ -747,3 +747,217 @@ footer { background: #1e272e; color: white; padding: 4rem 5% 1rem; text-align: l
 .read-more:hover {
     gap: 10px; /* Efecto flechita */
 }
+
+
+/* =========================================
+   ESTILOS PÁGINA DE ARTÍCULO (COMODÍN)
+   ========================================= */
+.article-hero {
+    height: 60vh;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.article-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2), var(--bg-body));
+}
+
+.article-header-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    padding: 2rem;
+    margin-bottom: -4rem; /* Efecto flotante */
+    background: var(--bg-card);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+}
+
+.article-tag {
+    background: var(--primary);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.article-title {
+    font-size: 2.5rem;
+    margin: 1rem 0;
+    line-height: 1.2;
+    color: var(--text-main);
+}
+
+.article-meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.article-body {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 4rem 20px;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-main);
+}
+
+.article-body p { margin-bottom: 1.5rem; }
+
+.article-body h2 {
+    color: var(--primary);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.article-quote {
+    border-left: 4px solid var(--primary);
+    padding-left: 20px;
+    margin: 2rem 0;
+    font-style: italic;
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    background: var(--input-bg);
+    padding: 20px;
+    border-radius: 0 10px 10px 0;
+}
+
+.article-img-content {
+    width: 100%;
+    border-radius: 15px;
+    margin: 2rem 0;
+    box-shadow: var(--shadow);
+}
+
+.share-bar {
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+    margin: 3rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .article-hero { height: 50vh; }
+    .article-title { font-size: 1.8rem; }
+    .article-header-content { margin: 0 20px -2rem 20px; }
+}
+
+
+/* =========================================
+   BARRA DE ANUNCIOS (TOP BAR)
+   ========================================= */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 35px;
+    background-color: #2d3436; /* Color oscuro elegante */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2001; /* Encima del header */
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.top-bar-content {
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* AJUSTAR EL HEADER PARA QUE BAJE UN POQUITO */
+header {
+    top: 35px !important; /* Baja 35px para dejar lugar a la barra */
+}
+
+/* AJUSTAR EL CUERPO DE LA PÁGINA */
+body {
+    padding-top: 105px !important; /* 70px header + 35px barra */
+}
+
+/* EN MODO OSCURO */
+body.dark-mode .top-bar {
+    background-color: var(--primary); /* Violeta en modo oscuro */
+}
+
+/* CELULAR */
+@media (max-width: 768px) {
+    .main-nav {
+        top: 105px !important; /* Ajustar menú móvil */
+    }
+}
+
+/* =========================================
+   SKELETON LOADING (CARGA FANTASMA)
+   ========================================= */
+.skeleton {
+    background: #eee;
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    border-radius: 10px;
+    background-size: 200% 100%;
+    animation: 1.5s shine linear infinite;
+}
+
+.card-skeleton {
+    background: var(--bg-card);
+    border-radius: 15px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    height: 350px; /* Altura aproximada de una tarjeta real */
+    display: flex;
+    flex-direction: column;
+}
+
+.sk-img {
+    width: 100%;
+    height: 220px;
+    background: #e0e0e0;
+}
+
+.sk-info {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sk-line {
+    height: 15px;
+    border-radius: 4px;
+}
+
+.sk-line.short { width: 60%; }
+.sk-line.long { width: 90%; }
+
+@keyframes shine {
+    to {
+        background-position-x: -200%;
+    }
+}
+

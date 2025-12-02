@@ -4,7 +4,7 @@
 import { db } from './config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// EXPOSICIÓN DE FUNCIONES AL HTML
+// EXPOSICIÓN DE FUNCIONES
 window.toggleCart = toggleCart;
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
@@ -32,27 +32,23 @@ window.handleChat = handleChat;
 window.sendMessage = sendMessage;
 window.startVoiceSearch = startVoiceSearch;
 window.goToSlide = goToSlide;
-window.updateCheckoutRules = updateCheckoutRules; 
+window.updateCheckoutRules = updateCheckoutRules;
 
-// CONSTANTES GLOBALES
-const NUMERO_WHATSAPP = "5491100000000"; 
-const ENVIO_GRATIS_META = 50000; 
+// CONSTANTES
+const NUMERO_WHATSAPP = "5491168722917"; 
+const ENVIO_GRATIS_META = 150000; 
+const MOSTRAR_POPUP_PROMO = false; 
 
-// =========================================
-// 2. ESTADO DE LA APLICACIÓN
-// =========================================
+// ESTADO
 let allProducts = [];       
 let currentProducts = [];   
 let categoriesData = [];    
 let activeCoupons = [];     
-
 let cart = JSON.parse(localStorage.getItem('cart')) || []; 
 let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 let discount = 0;
 let currentOpenProductId = null;
 let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
-
-// MEMORIA DE STOCK
 let stockMemory = JSON.parse(localStorage.getItem('stock_memory')) || {};
 
 const grid = document.getElementById('products-container');
@@ -62,6 +58,9 @@ const title = document.getElementById('current-section-title');
 // 3. INICIALIZACIÓN
 // =========================================
 async function initStore() {
+    // <--- AQUÍ ESTÁ EL SKELETON LOADING (CARGA FANTASMA) --->
+    showSkeletons();
+
     try {
         const catSnap = await getDocs(collection(db, "categories"));
         categoriesData = [];
@@ -95,48 +94,58 @@ async function initStore() {
         updateCartUI(); 
         setTimeout(setupLiveSearch, 1000); 
         setTimeout(showSalesNotification, 10000);
+        
         setTimeout(() => { 
-            if(!sessionStorage.getItem('promoShown') && document.getElementById('promo-overlay')) {
+            if(MOSTRAR_POPUP_PROMO && !sessionStorage.getItem('promoShown') && document.getElementById('promo-overlay')) {
                 document.getElementById('promo-overlay').classList.add('active'); 
             }
         }, 3000);
 
     } catch (error) {
-        console.error("Error conectando a Firebase:", error);
+        console.error("Error Firebase:", error);
+        if(grid) grid.innerHTML = '<p style="text-align:center; padding:2rem; color:red;">Error de conexión.</p>';
     }
 }
 
 // =========================================
-// 4. FUNCIONALIDAD PRO: BUSCADOR PREDICTIVO
+// FUNCIÓN SKELETON (VISUAL PRO)
+// =========================================
+function showSkeletons() {
+    if(!grid) return;
+    grid.innerHTML = '';
+    for(let i=0; i<8; i++) {
+        grid.innerHTML += `
+            <div class="card-skeleton">
+                <div class="sk-img skeleton"></div>
+                <div class="sk-info">
+                    <div class="sk-line short skeleton"></div>
+                    <div class="sk-line long skeleton"></div>
+                    <div class="sk-line short skeleton"></div>
+                    <div class="sk-line long skeleton" style="margin-top:10px;"></div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// =========================================
+// BUSCADOR PREDICTIVO CON FOTOS
 // =========================================
 function setupLiveSearch() {
     const searchInput = document.getElementById('search-input');
     const searchBox = document.querySelector('.search-box');
-    
     if (!searchInput || !searchBox) return;
-
     const style = document.createElement('style');
-    style.innerHTML = `
-        .live-search-results { position: absolute; top: 100%; left: 0; width: 250px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5000; overflow: hidden; display: none; border: 1px solid var(--border-color); }
-        .live-item { display: flex; align-items: center; padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
-        .live-item:hover { background: var(--input-bg); }
-        .live-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; margin-right: 10px; }
-        .live-info h4 { font-size: 0.85rem; margin: 0; color: var(--text-main); }
-        .live-info span { font-size: 0.8rem; font-weight: bold; color: var(--primary); }
-    `;
+    style.innerHTML = `.live-search-results { position: absolute; top: 100%; left: 0; width: 250px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5000; overflow: hidden; display: none; border: 1px solid var(--border-color); } .live-item { display: flex; align-items: center; padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; } .live-item:hover { background: var(--input-bg); } .live-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; margin-right: 10px; } .live-info h4 { font-size: 0.85rem; margin: 0; color: var(--text-main); } .live-info span { font-size: 0.8rem; font-weight: bold; color: var(--primary); }`;
     document.head.appendChild(style);
-
     const resultsContainer = document.createElement('div');
     resultsContainer.className = 'live-search-results';
     searchBox.style.position = 'relative'; 
     searchBox.appendChild(resultsContainer);
-
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase().trim();
         if (term.length < 2) { resultsContainer.style.display = 'none'; return; }
-
         const matches = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.toLowerCase().includes(term))).slice(0, 5);
-
         if (matches.length > 0) {
             resultsContainer.innerHTML = '';
             matches.forEach(p => {
@@ -149,13 +158,9 @@ function setupLiveSearch() {
             resultsContainer.style.display = 'block';
         } else { resultsContainer.style.display = 'none'; }
     });
-
     document.addEventListener('click', (e) => { if (!searchBox.contains(e.target)) { resultsContainer.style.display = 'none'; } });
 }
 
-// =========================================
-// 5. MENÚ LATERAL Y FILTROS
-// =========================================
 function renderDynamicMenu() {
     const menuContainer = document.querySelector('.menu-scroll-content');
     if (!menuContainer) return;
@@ -186,74 +191,14 @@ function renderDynamicMenu() {
     menuContainer.appendChild(btn);
 }
 
-function filterByMain(catId) {
-    renderWithAnimation(() => {
-        const filtered = catId === 'all' ? allProducts : allProducts.filter(p => p.category === catId);
-        renderFiltered(filtered);
-        if(title) {
-            if(catId === 'all') title.innerText = "Todos los Productos";
-            else {
-                const c = categoriesData.find(x => x.id === catId);
-                title.innerText = c ? c.name : catId.toUpperCase();
-            }
-        }
-    });
-}
-
-function filterBySub(catId, subId) {
-    renderWithAnimation(() => {
-        const filtered = allProducts.filter(p => p.category === catId && p.sub === subId);
-        renderFiltered(filtered);
-        if(title) title.innerText = subId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    });
-}
-
-function showFavorites() {
-    renderWithAnimation(() => {
-        const favs = allProducts.filter(p => wishlist.includes(String(p.id)));
-        renderFiltered(favs);
-        if(title) title.innerText = "Mis Favoritos ❤️";
-    });
-}
-
-function searchProducts(query) {
-    const term = query.toLowerCase().trim();
-    if(term === "") { filterByMain('all'); return; }
-    renderWithAnimation(() => {
-        const results = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.includes(term)) || (p.sub && p.sub.includes(term)));
-        renderFiltered(results);
-        if(title) title.innerText = `Resultados: "${term}"`;
-    });
-}
-
-function startVoiceSearch() {
-    if (!('webkitSpeechRecognition' in window)) { alert("Tu navegador no soporta búsqueda por voz."); return; }
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = "es-ES";
-    const btn = document.querySelector('.voice-btn i');
-    recognition.onstart = () => { if(btn) btn.parentElement.classList.add('listening'); const input = document.getElementById('search-input'); if(input) input.placeholder = "Escuchando..."; };
-    recognition.onend = () => { if(btn) btn.parentElement.classList.remove('listening'); const input = document.getElementById('search-input'); if(input) input.placeholder = "Buscar..."; };
-    recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; const input = document.getElementById('search-input'); if(input) input.value = transcript; searchProducts(transcript); };
-    recognition.start();
-}
-
-function sortProducts(criteria) {
-    let sorted = [...currentProducts];
-    switch(criteria) {
-        case 'price-asc': sorted.sort((a, b) => a.price - b.price); break;
-        case 'price-desc': sorted.sort((a, b) => b.price - a.price); break;
-        case 'alpha-asc': sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
-        default: sorted.sort((a, b) => a.id - b.id); break;
-    }
-    renderFiltered(sorted, false); 
-}
-
-function setGridView() { const container = document.getElementById('products-container'); if(container) container.classList.remove('list-view'); document.querySelectorAll('.view-btn')[0]?.classList.add('active'); document.querySelectorAll('.view-btn')[1]?.classList.remove('active'); }
-function setListView() { const container = document.getElementById('products-container'); if(container) container.classList.add('list-view'); document.querySelectorAll('.view-btn')[0]?.classList.remove('active'); document.querySelectorAll('.view-btn')[1]?.classList.add('active'); }
-
-// =========================================
-// 6. RENDERIZADO (CORE)
-// =========================================
+function filterByMain(catId) { renderWithAnimation(() => { const filtered = catId === 'all' ? allProducts : allProducts.filter(p => p.category === catId); renderFiltered(filtered); if(title) title.innerText = catId === 'all' ? "Todos los Productos" : (categoriesData.find(x => x.id === catId)?.name || catId); }); }
+function filterBySub(catId, subId) { renderWithAnimation(() => { const filtered = allProducts.filter(p => p.category === catId && p.sub === subId); renderFiltered(filtered); if(title) title.innerText = subId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); }); }
+function showFavorites() { renderWithAnimation(() => { const favs = allProducts.filter(p => wishlist.includes(String(p.id))); renderFiltered(favs); if(title) title.innerText = "Mis Favoritos ❤️"; }); }
+function searchProducts(query) { const term = query.toLowerCase().trim(); if(term === "") { filterByMain('all'); return; } renderWithAnimation(() => { const results = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.includes(term)) || (p.sub && p.sub.includes(term))); renderFiltered(results); if(title) title.innerText = `Resultados: "${term}"`; }); }
+function startVoiceSearch() { if (!('webkitSpeechRecognition' in window)) { alert("Tu navegador no soporta búsqueda por voz."); return; } const recognition = new webkitSpeechRecognition(); recognition.lang = "es-ES"; const btn = document.querySelector('.voice-btn i'); recognition.onstart = () => { if(btn) btn.parentElement.classList.add('listening'); document.getElementById('search-input').placeholder = "Escuchando..."; }; recognition.onend = () => { if(btn) btn.parentElement.classList.remove('listening'); document.getElementById('search-input').placeholder = "Buscar..."; }; recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; document.getElementById('search-input').value = transcript; searchProducts(transcript); }; recognition.start(); }
+function sortProducts(criteria) { let sorted = [...currentProducts]; switch(criteria) { case 'price-asc': sorted.sort((a, b) => a.price - b.price); break; case 'price-desc': sorted.sort((a, b) => b.price - a.price); break; case 'alpha-asc': sorted.sort((a, b) => a.name.localeCompare(b.name)); break; default: sorted.sort((a, b) => a.id - b.id); break; } renderFiltered(sorted, false); }
+function setGridView() { document.getElementById('products-container').classList.remove('list-view'); document.querySelectorAll('.view-btn')[0].classList.add('active'); document.querySelectorAll('.view-btn')[1].classList.remove('active'); }
+function setListView() { document.getElementById('products-container').classList.add('list-view'); document.querySelectorAll('.view-btn')[0].classList.remove('active'); document.querySelectorAll('.view-btn')[1].classList.add('active'); }
 function renderWithAnimation(cb) { if (!grid) return; grid.style.opacity = '0'; setTimeout(() => { cb(); grid.style.opacity = '1'; }, 200); }
 
 function renderFiltered(list, animate = true) {
@@ -264,7 +209,7 @@ function renderFiltered(list, animate = true) {
     grid.innerHTML = '';
     if(list.length === 0) { grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:2rem;">No se encontraron productos.</p>'; return; }
     list.forEach(p => createProductCard(p));
-    if (animate) { observeRevealElements(); } else { document.querySelectorAll('.reveal').forEach(el => el.classList.add('active')); }
+    if (animate) observeRevealElements(); else document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
 }
 
 function createProductCard(p) {
@@ -284,11 +229,9 @@ function createProductCard(p) {
         priceHTML = `<div class="card-price"><span class="old-price">$${p.oldPrice.toLocaleString()}</span> $${p.price.toLocaleString()}</div>`;
         if(!p.badge) badgeHTML = `<span class="card-badge badge-offer">-${off}% OFF</span>`;
     }
-
+    // <--- ETIQUETA DE ENVÍO GRATIS --->
     let freeShipHTML = "";
-    if (p.price >= ENVIO_GRATIS_META) {
-        freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>';
-    }
+    if (p.price >= ENVIO_GRATIS_META) { freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>'; }
 
     const card = document.createElement('div');
     card.className = 'card reveal';
@@ -310,9 +253,6 @@ function createProductCard(p) {
     grid.appendChild(card);
 }
 
-// =========================================
-// 7. CARRITO & WISHLIST
-// =========================================
 function toggleWishlist(id, btn) {
     id = String(id);
     const idx = wishlist.indexOf(id);
@@ -374,21 +314,7 @@ function updateCartUI() {
     else { 
         cart.forEach(item => { 
             total += item.price * item.qty; 
-            itemsEl.innerHTML += `
-            <div class="cart-item">
-                <div class="item-info">
-                    <h4>${item.name}</h4>
-                    <small>$${item.price.toLocaleString()}</small>
-                </div>
-                <div class="item-controls">
-                    <button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button>
-                    <span>${item.qty}</span>
-                    <button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button>
-                    <button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;font-size:1.2rem;">
-                        <i class="ph ph-trash"></i>
-                    </button>
-                </div>
-            </div>`; 
+            itemsEl.innerHTML += `<div class="cart-item"><div class="item-info"><h4>${item.name}</h4><small>$${item.price.toLocaleString()}</small></div><div class="item-controls"><button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button><span>${item.qty}</span><button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button><button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;font-size:1.2rem;"><i class="ph ph-trash"></i></button></div></div>`; 
         }); 
     }
     totalEl.innerText = '$' + total.toLocaleString();
@@ -403,7 +329,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (FULL)
+// 8. VISTA RÁPIDA (MODIFICADA: EFECTIVO SI/NO)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -412,31 +338,19 @@ function openQuickView(id) {
     currentOpenProductId = id;
     addToHistory(id);
     
-    // ZOOM
+    // <--- ZOOM & IMAGEN --->
     const imgContainer = document.querySelector('.qv-image-col');
     const img = document.getElementById('qv-img');
     img.src = p.img;
-    imgContainer.style.overflow = "hidden";
-    imgContainer.style.cursor = "crosshair"; 
-    img.style.transition = "transform 0.2s ease-out"; 
-    imgContainer.onmousemove = function(e) {
-        const { left, top, width, height } = imgContainer.getBoundingClientRect();
-        const x = e.clientX - left;
-        const y = e.clientY - top;
-        const xPercent = (x / width) * 100;
-        const yPercent = (y / height) * 100;
-        img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
-        img.style.transform = "scale(2.5)"; 
-    };
-    imgContainer.onmouseleave = function() {
-        img.style.transformOrigin = "center center";
-        img.style.transform = "scale(1)";
-    };
+    imgContainer.style.overflow = "hidden"; imgContainer.style.cursor = "crosshair"; img.style.transition = "transform 0.2s ease-out"; 
+    imgContainer.onmousemove = function(e) { const { left, top, width, height } = imgContainer.getBoundingClientRect(); const x = e.clientX - left; const y = e.clientY - top; const xPercent = (x / width) * 100; const yPercent = (y / height) * 100; img.style.transformOrigin = `${xPercent}% ${yPercent}%`; img.style.transform = "scale(2.5)"; };
+    imgContainer.onmouseleave = function() { img.style.transformOrigin = "center center"; img.style.transform = "scale(1)"; };
 
     const catObj = categoriesData.find(c => c.id === p.category);
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
+    // <--- URGENCIA: Personas viendo --->
     const viewers = Math.floor(Math.random() * 20) + 5;
     if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
 
@@ -449,62 +363,50 @@ function openQuickView(id) {
     if(priceBox) priceBox.innerHTML = priceHtml;
     else document.getElementById('qv-price').innerHTML = priceHtml; 
 
-    // CALCULADORA DE PAGOS
+    // <--- CALCULADORA DE PAGOS (SOLO EFECTIVO) --->
     let paymentInfo = document.getElementById('qv-payment-info');
     if(paymentInfo) paymentInfo.remove(); 
-    paymentInfo = document.createElement('div');
-    paymentInfo.id = 'qv-payment-info';
-    paymentInfo.style.cssText = "background: rgba(108, 92, 231, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--primary); display: flex; flex-direction: column; gap: 8px;";
-    const cashPrice = (p.price * 0.9).toLocaleString('es-AR'); 
-    const quote3 = (p.price / 3).toLocaleString('es-AR', {maximumFractionDigits: 2}); 
-    paymentInfo.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px;">
-            <i class="ph ph-bank" style="color:var(--primary); font-size:1.4rem;"></i>
-            <span style="font-size:0.9rem; color:var(--text-main);">
-                Transferencia (-10%): <strong style="color:#27ae60;">$${cashPrice}</strong>
-            </span>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <i class="ph ph-credit-card" style="color:var(--primary); font-size:1.4rem;"></i>
-            <span style="font-size:0.9rem; color:var(--text-main);">
-                3 Cuotas de: <strong>$${quote3}</strong>
-            </span>
-        </div>
-    `;
-    if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
+    
+    if (p.promoCash) { // SOLO SI EL ADMIN LO ACTIVÓ
+        paymentInfo = document.createElement('div');
+        paymentInfo.id = 'qv-payment-info';
+        paymentInfo.style.cssText = "background: rgba(108, 92, 231, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--primary); display: flex; flex-direction: column; gap: 8px;";
+        
+        const cashPrice = (p.price * 0.9).toLocaleString('es-AR'); 
+        
+        paymentInfo.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="ph ph-money" style="color:var(--primary); font-size:1.4rem;"></i>
+                <span style="font-size:0.9rem; color:var(--text-main);">
+                    Efectivo (10% OFF): <strong style="color:#27ae60;">$${cashPrice}</strong>
+                </span>
+            </div>
+        `;
+        if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
+    }
 
-    // ALERTA STOCK
+    // <--- STOCK INTELIGENTE (NO BAJA DE 1) --->
     let stockAlert = document.getElementById('qv-stock-alert');
     if(stockAlert) stockAlert.remove(); 
     let currentStock = 0;
     if (stockMemory[id]) {
-        if (stockMemory[id] > 1) { stockMemory[id]--; } 
+        if (stockMemory[id] > 1) { stockMemory[id]--; } // <-- AQUÍ ESTÁ LA LÓGICA MÍNIMO 1
         currentStock = stockMemory[id];
-    } else {
-        currentStock = Math.floor(Math.random() * 6) + 5;
-    }
+    } else { currentStock = Math.floor(Math.random() * 6) + 5; }
     stockMemory[id] = currentStock;
     localStorage.setItem('stock_memory', JSON.stringify(stockMemory));
 
     stockAlert = document.createElement('div');
     stockAlert.id = 'qv-stock-alert';
     stockAlert.style.marginBottom = "15px";
-    stockAlert.innerHTML = `
-        <p style="font-size: 0.85rem; color: #e17055; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;">
-            <i class="ph ph-fire"></i> ¡Date prisa! Solo quedan ${currentStock} unidades
-        </p>
-        <div style="width: 100%; background: #dfe6e9; height: 6px; border-radius: 3px; overflow: hidden;">
-            <div style="width: ${currentStock * 10}%; background: #e17055; height: 100%;"></div>
-        </div>
-    `;
+    stockAlert.innerHTML = `<p style="font-size: 0.85rem; color: #e17055; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px;"><i class="ph ph-fire"></i> ¡Date prisa! Solo quedan ${currentStock} unidades</p><div style="width: 100%; background: #dfe6e9; height: 6px; border-radius: 3px; overflow: hidden;"><div style="width: ${currentStock * 10}%; background: #e17055; height: 100%;"></div></div>`;
 
     document.getElementById('qv-desc').innerText = p.desc || "Producto artesanal exclusivo.";
-    
     const addBtn = document.getElementById('qv-add-btn');
     addBtn.parentNode.insertBefore(stockAlert, addBtn);
     addBtn.onclick = function() { addToCart(p.id, this); closeQuickViewForce(); };
 
-    // Botón Compartir
+    // <--- BOTÓN COMPARTIR --->
     let shareBtn = document.getElementById('qv-share-btn');
     if (!shareBtn) {
         shareBtn = document.createElement('button');
@@ -512,8 +414,6 @@ function openQuickView(id) {
         shareBtn.style.cssText = "margin-left: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; transition: 0.3s;";
         shareBtn.innerHTML = '<i class="ph ph-share-network"></i>';
         shareBtn.title = "Compartir";
-        shareBtn.onmouseover = function() { this.style.background = "var(--input-bg)"; };
-        shareBtn.onmouseout = function() { this.style.background = "var(--bg-card)"; };
         addBtn.parentNode.insertBefore(shareBtn, addBtn.nextSibling);
     }
     shareBtn.onclick = async () => {
@@ -521,6 +421,7 @@ function openQuickView(id) {
         try { if (navigator.share) { await navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} en: ${shareData.url}`); showToast("¡Link copiado!"); } } catch (err) { console.log(err); }
     };
 
+    // <--- VENTA CRUZADA (CROSS-SELLING) --->
     const relatedContainer = document.getElementById('qv-related-container');
     if(relatedContainer) {
         relatedContainer.innerHTML = '';
@@ -578,16 +479,14 @@ function submitReview() {
 }
 
 // =========================================
-// 9. CHECKOUT INTELIGENTE (SMART CHECKOUT FORM)
+// 9. CHECKOUT INTELIGENTE
 // =========================================
 function openCheckoutModal() {
     if(cart.length === 0) { showToast("Carrito vacío", "error"); return; }
     toggleCart(false);
-    discount = 0; // Reset descuento
+    discount = 0; 
     document.getElementById('coupon-input').value = '';
     document.getElementById('coupon-msg').innerText = '';
-    
-    // Preparar el modal para mostrar inputs
     document.getElementById('modal-subtotal').style.display = 'block'; 
     document.getElementById('modal-discount').style.display = 'none';
     
@@ -605,7 +504,7 @@ function renderCheckoutItems() {
                     <input type="radio" name="payment" value="transfer" checked onchange="updateCheckoutRules()"> Transferencia / MercadoPago
                 </label>
                 <label style="border:1px solid #ddd;padding:8px;border-radius:6px;cursor:pointer;font-size:0.85rem;">
-                    <input type="radio" name="payment" value="cash" onchange="updateCheckoutRules()"> Efectivo <strong style="color:#27ae60;">(10% OFF)</strong>
+                    <input type="radio" name="payment" value="cash" onchange="updateCheckoutRules()"> Efectivo <strong style="color:#27ae60;">(10% OFF en productos seleccionados)</strong>
                 </label>
             </div>
         </div>
@@ -648,28 +547,23 @@ function renderCheckoutItems() {
             </div>
         </div>
     `;
-    updateCheckoutRules(); // Inicializar estado
+    updateCheckoutRules(); 
 }
 
-// --- FUNCIÓN MAESTRA DE REGLAS (NUEVO) ---
 function updateCheckoutRules() {
-    // 1. Obtener valores
     const payment = document.querySelector('input[name="payment"]:checked').value;
     const deliveryRadios = document.getElementsByName('delivery');
     const lblEnvio = document.getElementById('lbl-envio');
     const addressContainer = document.getElementById('address-container');
 
-    // REGLA: Si es Efectivo, NO hay envío (solo retiro)
+    // REGLA: Si es Efectivo, bloqueo Envío (solo retiro)
     if (payment === 'cash') {
-        // Seleccionar Retiro forzosamente
-        deliveryRadios[0].checked = true; // Index 0 es retiro
-        // Deshabilitar Envío
+        deliveryRadios[0].checked = true;
         deliveryRadios[1].disabled = true;
         lblEnvio.style.opacity = '0.5';
         lblEnvio.style.pointerEvents = 'none';
         lblEnvio.title = "Envío solo disponible con Transferencia";
     } else {
-        // Habilitar Envío
         deliveryRadios[1].disabled = false;
         lblEnvio.style.opacity = '1';
         lblEnvio.style.pointerEvents = 'auto';
@@ -677,7 +571,6 @@ function updateCheckoutRules() {
     }
 
     // REGLA: Mostrar Dirección solo si eligió Envío
-    // Volvemos a leer el valor de delivery porque pudo haber cambiado arriba
     const delivery = document.querySelector('input[name="delivery"]:checked').value;
     if (delivery === 'envio') {
         addressContainer.style.display = 'block';
@@ -685,7 +578,6 @@ function updateCheckoutRules() {
         addressContainer.style.display = 'none';
     }
 
-    // Finalmente, recalcular totales (por el descuento de efectivo)
     updateCheckoutTotal();
 }
 
@@ -694,42 +586,36 @@ function updateCheckoutTotal() {
     let total = subtotal;
     let paymentDisc = 0;
 
-    // Verificar si hay cupón aplicado
-    if (discount > 0) {
-        total -= discount;
-    }
+    if (discount > 0) { total -= discount; }
 
-    // Verificar si eligió Efectivo (10% descuento EXTRA)
     const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
     if (paymentMethod === 'cash') {
-        paymentDisc = total * 0.10; // 10% del total actual
+        // Recorrer carrito y sumar descuento solo de items habilitados
+        cart.forEach(item => {
+            if (item.promoCash) { // Si el producto tiene el flag activado en Admin
+                const itemTotal = item.price * item.qty;
+                paymentDisc += itemTotal * 0.10;
+            }
+        });
         total -= paymentDisc;
     }
 
-    // Actualizar UI
     document.getElementById('modal-subtotal').innerText = `Subtotal: $${subtotal.toLocaleString()}`;
-    
     const discElem = document.getElementById('modal-discount');
-    // Mostrar descuentos acumulados (Cupón + Efectivo)
     const totalDiscount = discount + paymentDisc;
-    
     if (totalDiscount > 0) {
         discElem.style.display = 'block';
         discElem.innerText = `Descuento Total: -$${totalDiscount.toLocaleString()}`;
-    } else {
-        discElem.style.display = 'none';
-    }
-
+    } else { discElem.style.display = 'none'; }
     document.getElementById('modal-total-price').innerText = '$' + total.toLocaleString();
 }
 
 function applyCoupon() {
     const code = document.getElementById('coupon-input').value.toUpperCase().trim();
     const msg = document.getElementById('coupon-msg');
-    let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-
     const found = activeCoupons.find(c => c.code === code);
     if (found) {
+        let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
         discount = subtotal * found.discount;
         msg.style.color = "#2ecc71";
         msg.innerText = `¡Cupón aplicado! ${found.discount * 100}% OFF`;
@@ -738,7 +624,7 @@ function applyCoupon() {
         msg.style.color = "#e74c3c";
         msg.innerText = "Cupón inválido";
     }
-    updateCheckoutRules(); // Usar la función maestra
+    updateCheckoutRules(); 
 }
 
 function closeCheckoutModal() { document.getElementById('checkout-overlay').classList.remove('active'); toggleCart(true); }
@@ -752,7 +638,6 @@ function sendToWhatsApp() {
     let deliveryText = "Retiro por Local";
     let addressText = "";
 
-    // Si es envío, capturamos la dirección
     if (deliveryVal === 'envio') {
         const addressInput = document.getElementById('client-address').value;
         deliveryText = "Envío a Domicilio";
@@ -760,9 +645,8 @@ function sendToWhatsApp() {
     }
 
     const paymentVal = document.querySelector('input[name="payment"]:checked').value;
-    const paymentText = paymentVal === "cash" ? "Efectivo (10% OFF)" : "Transferencia / MP";
+    const paymentText = paymentVal === "cash" ? "Efectivo" : "Transferencia / MP";
     
-    // Obtener el total final calculado
     const finalTotal = document.getElementById('modal-total-price').innerText;
 
     let msg = `Hola! 👋 Soy *${name}*.\nQuiero confirmar mi pedido:\n\n`;
@@ -773,7 +657,7 @@ function sendToWhatsApp() {
     
     msg += `\n📞 *Teléfono:* ${phone}`;
     msg += `\n📦 *Entrega:* ${deliveryText}`;
-    if (addressText) msg += addressText; // Solo agregamos dirección si corresponde
+    if (addressText) msg += addressText; 
     msg += `\n💳 *Pago:* ${paymentText}`;
     msg += `\n📝 *Notas:* ${notes}`;
     msg += `\n\n💰 *TOTAL FINAL: ${finalTotal}*`;
@@ -832,35 +716,19 @@ function getBotResponse(text) {
     if (botKnowledge.gracias.some(k => clean.includes(k))) return "¡De nada! Quedo a tu disposición.";
     return "Soy una IA entrenada solo para responder sobre la tienda (Envíos, Pagos, Productos). 🤖";
 }
-const fakeSales = [ 
-    {name:"María", loc:"Morón"}, 
-    {name:"Lucía", loc:"Haedo"}, 
-    {name:"Sofía", loc:"Ramos"}, 
-    {name:"Carla", loc:"Castelar"} 
-];
+const fakeSales = [ {name:"María", loc:"Morón"}, {name:"Lucía", loc:"Haedo"}, {name:"Sofía", loc:"Ramos"}, {name:"Carla", loc:"Castelar"} ];
 function showSalesNotification() {
     const notif = document.getElementById('sales-notification');
     if(!notif || allProducts.length === 0) return;
-    
-    // 1. Elegimos un cliente falso
     const randomCustomer = fakeSales[Math.floor(Math.random() * fakeSales.length)];
-    
-    // 2. Elegimos un producto REAL de tu tienda
     const randomProduct = allProducts[Math.floor(Math.random() * allProducts.length)];
-    
     const randomTime = Math.floor(Math.random() * 10) + 2;
-
     document.getElementById('sales-name').innerText = randomCustomer.name;
-    // Si tienes el elemento de ubicación, lo llenamos (opcional)
     const locElem = document.getElementById('sales-loc');
     if(locElem) locElem.innerText = randomCustomer.loc;
-
-    // Aquí usamos los datos REALES del producto
     document.getElementById('sales-product').innerText = randomProduct.name;
     document.getElementById('sales-img').src = randomProduct.img;
-    
     document.getElementById('sales-time').innerText = `Hace ${randomTime} min`;
-
     notif.classList.add('active');
     setTimeout(() => { notif.classList.remove('active'); }, 5000);
 }
