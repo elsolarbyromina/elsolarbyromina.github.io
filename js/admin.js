@@ -44,7 +44,7 @@ window.deleteCoupon = deleteCoupon;
 window.resetStock = resetStock;
 window.exportToCSV = exportToCSV;
 
-// --- NUEVO: FUNCIONES DE IA ---
+// --- FUNCIONES DE IA (COPILOTO) ---
 window.toggleDescMode = toggleDescMode;
 window.generateAIDescription = generateAIDescription;
 
@@ -479,7 +479,7 @@ function exportToCSV() {
 }
 
 // =========================================
-// 10. GENERADOR DE DESCRIPCIONES CON IA
+// 10. GENERADOR DE DESCRIPCIONES (MODO COPILOTO DE PROMPTS)
 // =========================================
 function toggleDescMode(mode) {
     const btnManual = document.getElementById('btn-mode-manual');
@@ -498,53 +498,59 @@ function toggleDescMode(mode) {
     } else {
         btnManual.style.background = "white";
         btnManual.style.fontWeight = "normal";
-        btnAi.style.background = "#fdcb6e"; 
+        btnAi.style.background = "linear-gradient(45deg, #10a37f, #2563eb)"; // Colores ChatGPT/Gemini
+        btnAi.style.color = "white";
         btnAi.style.fontWeight = "bold";
         btnGen.style.display = "flex";
-        txtArea.placeholder = "Presiona el botón mágico para generar...";
+        btnGen.innerHTML = '<i class="ph ph-robot"></i> Copiar Prompt y Abrir IA';
+        txtArea.placeholder = "1. Toca el botón de arriba.\n2. Pega en tu IA favorita (Ctrl+V).\n3. Copia el resultado y pégalo aquí.";
     }
 }
 
 function generateAIDescription() {
     const name = document.getElementById('p-name').value.trim();
-    const categoryId = document.getElementById('p-cat').value;
-    const sub = document.getElementById('p-sub').value;
     const catSelect = document.getElementById('p-cat');
     
-    // Check de seguridad
-    if (catSelect.selectedIndex === -1 || !categoryId) {
-        return alert("⚠️ Para que la IA funcione, primero escribe el Nombre del producto y elige una Categoría.");
+    // Validación
+    if (catSelect.selectedIndex === -1 || !name) {
+        return alert("⚠️ Primero escribe el Nombre y elige la Categoría.");
     }
+    
     const categoryName = catSelect.options[catSelect.selectedIndex].text;
+    const sub = document.getElementById('p-sub').value;
+    const price = document.getElementById('p-price').value;
 
-    if (!name) return alert("Escribe el nombre del producto primero.");
+    // --- AQUÍ CREAMOS EL "PROMPT PERFECTO" ---
+    const prompt = `Actúa como un experto copywriter de e-commerce especializado en productos artesanales y decoración.
+    
+Necesito una descripción de producto atractiva, emocional y persuasiva para la venta.
+    
+Datos del producto:
+- Nombre: ${name}
+- Categoría: ${categoryName}
+- Subcategoría: ${sub || 'General'}
+- Precio: $${price}
+    
+Requisitos:
+1. Usa un tono cálido, cercano y profesional.
+2. Destaca que es un producto único o artesanal.
+3. Menciona posibles usos (regalo, decoración, uso diario).
+4. Incluye emojis sutiles.
+5. La longitud debe ser de máximo 3 o 4 líneas.
+6. NO pongas comillas al principio ni al final.`;
 
-    const textArea = document.getElementById('p-desc');
-    textArea.value = "🔮 La IA está pensando...";
-
-    const intros = ["Descubre la magia de", "Enamórate de", "Dale un toque único a tu vida con", "Renueva tu estilo con", "La pieza que estabas buscando:"];
-    const middles = [`este increíble diseño de ${categoryName}`, `esta creación artesanal de la línea ${sub || categoryName}`, `nuestro exclusivo modelo pensado para ti`, `una obra maestra hecha a mano`];
-    const emotions = ["que aporta calidez y distinción.", "creado con amor y dedicación en cada detalle.", "perfecto para regalar o darte un gusto especial.", "que combina funcionalidad y belleza artesanal.", "listo para transformar tus espacios."];
-    const callToAction = ["¡No te quedes sin el tuyo!", "Edición limitada, consíguelo hoy.", "El detalle que faltaba en tu hogar.", "Calidad premium garantizada."];
-
-    setTimeout(() => {
-        const intro = intros[Math.floor(Math.random() * intros.length)];
-        const middle = middles[Math.floor(Math.random() * middles.length)];
-        const emotion = emotions[Math.floor(Math.random() * emotions.length)];
-        const cta = callToAction[Math.floor(Math.random() * callToAction.length)];
-
-        const finalDescription = `${intro} ${name}. Se trata de ${middle} ${emotion} ${cta}`;
-
-        textArea.value = "";
-        let i = 0;
-        const speed = 30; 
-        function typeWriter() {
-            if (i < finalDescription.length) {
-                textArea.value += finalDescription.charAt(i);
-                i++;
-                setTimeout(typeWriter, speed);
+    // 1. Copiar al portapapeles
+    navigator.clipboard.writeText(prompt).then(() => {
+        // 2. Preguntar qué IA abrir
+        if(confirm("✅ ¡Prompt Copiado!\n\n¿Quieres abrir ChatGPT para pegarlo ahora? \n(Cancelar para abrir Gemini o quedarte aquí)")) {
+            window.open('https://chatgpt.com', '_blank');
+        } else {
+            // Si cancela, ofrecemos Gemini
+            if(confirm("¿Prefieres abrir Google Gemini?")) {
+                window.open('https://gemini.google.com', '_blank');
             }
         }
-        typeWriter();
-    }, 800); 
+    }).catch(err => {
+        alert("Hubo un error al copiar. Hazlo manual.");
+    });
 }

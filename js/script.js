@@ -32,7 +32,7 @@ window.handleChat = handleChat;
 window.sendMessage = sendMessage;
 window.startVoiceSearch = startVoiceSearch;
 window.goToSlide = goToSlide;
-window.updateCheckoutRules = updateCheckoutRules; // Reglas del Checkout
+window.updateCheckoutRules = updateCheckoutRules; 
 
 // CONSTANTES GLOBALES
 const NUMERO_WHATSAPP = "5491100000000"; 
@@ -93,8 +93,6 @@ async function initStore() {
         initSlider();
         renderHistory();
         updateCartUI(); 
-        
-        // Activar funciones Pro
         setTimeout(setupLiveSearch, 1000); 
         setTimeout(showSalesNotification, 10000);
         setTimeout(() => { 
@@ -405,7 +403,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (FULL: ZOOM + PAGOS + STOCK MEMORY + COMPARTIR)
+// 8. VISTA RÁPIDA (FULL)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -439,7 +437,6 @@ function openQuickView(id) {
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
-    // URGENCIA: Personas viendo (INCLUIDO AHORA)
     const viewers = Math.floor(Math.random() * 20) + 5;
     if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
 
@@ -476,7 +473,7 @@ function openQuickView(id) {
     `;
     if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
 
-    // ALERTA STOCK (MÍNIMO 1)
+    // ALERTA STOCK
     let stockAlert = document.getElementById('qv-stock-alert');
     if(stockAlert) stockAlert.remove(); 
     let currentStock = 0;
@@ -600,8 +597,6 @@ function openCheckoutModal() {
 
 function renderCheckoutItems() {
     const body = document.getElementById('modal-body');
-    // Generamos el HTML del formulario DE UNA SOLA VEZ
-    // Incluye inputs para Nombre, Teléfono, Entrega y Pago
     body.innerHTML = `
         <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">1. Forma de Pago:</label>
@@ -653,7 +648,6 @@ function renderCheckoutItems() {
             </div>
         </div>
     `;
-    
     updateCheckoutRules(); // Inicializar estado
 }
 
@@ -838,17 +832,35 @@ function getBotResponse(text) {
     if (botKnowledge.gracias.some(k => clean.includes(k))) return "¡De nada! Quedo a tu disposición.";
     return "Soy una IA entrenada solo para responder sobre la tienda (Envíos, Pagos, Productos). 🤖";
 }
-const fakeSales = [ {name:"María", loc:"Morón", prod:"Gorro Lana"}, {name:"Lucía", loc:"Haedo", prod:"Cesta"}, {name:"Sofía", loc:"Ramos", prod:"Collar"}, {name:"Carla", loc:"Castelar", prod:"Mandala"} ];
+const fakeSales = [ 
+    {name:"María", loc:"Morón"}, 
+    {name:"Lucía", loc:"Haedo"}, 
+    {name:"Sofía", loc:"Ramos"}, 
+    {name:"Carla", loc:"Castelar"} 
+];
 function showSalesNotification() {
     const notif = document.getElementById('sales-notification');
     if(!notif || allProducts.length === 0) return;
-    const randomSale = fakeSales[Math.floor(Math.random() * fakeSales.length)];
+    
+    // 1. Elegimos un cliente falso
+    const randomCustomer = fakeSales[Math.floor(Math.random() * fakeSales.length)];
+    
+    // 2. Elegimos un producto REAL de tu tienda
+    const randomProduct = allProducts[Math.floor(Math.random() * allProducts.length)];
+    
     const randomTime = Math.floor(Math.random() * 10) + 2;
-    const pImg = allProducts[Math.floor(Math.random() * allProducts.length)].img;
-    document.getElementById('sales-name').innerText = randomSale.name;
-    document.getElementById('sales-product').innerText = randomSale.prod;
+
+    document.getElementById('sales-name').innerText = randomCustomer.name;
+    // Si tienes el elemento de ubicación, lo llenamos (opcional)
+    const locElem = document.getElementById('sales-loc');
+    if(locElem) locElem.innerText = randomCustomer.loc;
+
+    // Aquí usamos los datos REALES del producto
+    document.getElementById('sales-product').innerText = randomProduct.name;
+    document.getElementById('sales-img').src = randomProduct.img;
+    
     document.getElementById('sales-time').innerText = `Hace ${randomTime} min`;
-    document.getElementById('sales-img').src = pImg;
+
     notif.classList.add('active');
     setTimeout(() => { notif.classList.remove('active'); }, 5000);
 }
