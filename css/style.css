@@ -961,3 +961,30 @@ body.dark-mode .top-bar {
     }
 }
 
+/* =========================================
+   ARREGLO SCROLL CHECKOUT EN MÓVIL
+   ========================================= */
+.checkout-modal {
+    max-height: 85vh; /* Que nunca ocupe más del 85% de la altura de la pantalla */
+    overflow-y: auto; /* Si se pasa, que aparezca la barrita para bajar */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ajuste fino para la lista de productos dentro del modal */
+#modal-body {
+    overflow-y: visible; /* Dejamos que el scroll lo maneje el modal principal */
+}
+
+/* Asegurar que en celulares se vea bien el padding */
+@media (max-width: 768px) {
+    .checkout-modal {
+        padding: 1.5rem;
+        width: 95%; /* Un poquito más ancho en celular para aprovechar espacio */
+    }
+    
+    /* Achicar un poco los textos para que entre más info */
+    .checkout-modal h3 { font-size: 1.2rem; }
+    .checkout-modal label { font-size: 0.8rem; }
+    .checkout-modal input, .checkout-modal textarea { padding: 8px; font-size: 0.9rem; }
+}

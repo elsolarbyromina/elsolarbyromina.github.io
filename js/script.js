@@ -58,7 +58,6 @@ const title = document.getElementById('current-section-title');
 // 3. INICIALIZACIÓN
 // =========================================
 async function initStore() {
-    // <--- AQUÍ ESTÁ EL SKELETON LOADING (CARGA FANTASMA) --->
     showSkeletons();
 
     try {
@@ -85,9 +84,7 @@ async function initStore() {
 
         if (allProducts.length === 0) {
             if(grid) grid.innerHTML = "<p style='text-align:center; padding:2rem;'>No hay productos cargados.</p>";
-        } else {
-            filterByMain('all');
-        }
+        } else { filterByMain('all'); }
 
         initSlider();
         renderHistory();
@@ -101,14 +98,11 @@ async function initStore() {
             }
         }, 3000);
 
-    } catch (error) {
-        console.error("Error Firebase:", error);
-        if(grid) grid.innerHTML = '<p style="text-align:center; padding:2rem; color:red;">Error de conexión.</p>';
-    }
+    } catch (error) { console.error("Error Firebase:", error); }
 }
 
 // =========================================
-// FUNCIÓN SKELETON (VISUAL PRO)
+// 4. FUNCIONES VISUALES (SKELETON & LIVE SEARCH)
 // =========================================
 function showSkeletons() {
     if(!grid) return;
@@ -128,9 +122,6 @@ function showSkeletons() {
     }
 }
 
-// =========================================
-// BUSCADOR PREDICTIVO CON FOTOS
-// =========================================
 function setupLiveSearch() {
     const searchInput = document.getElementById('search-input');
     const searchBox = document.querySelector('.search-box');
@@ -229,7 +220,6 @@ function createProductCard(p) {
         priceHTML = `<div class="card-price"><span class="old-price">$${p.oldPrice.toLocaleString()}</span> $${p.price.toLocaleString()}</div>`;
         if(!p.badge) badgeHTML = `<span class="card-badge badge-offer">-${off}% OFF</span>`;
     }
-    // <--- ETIQUETA DE ENVÍO GRATIS --->
     let freeShipHTML = "";
     if (p.price >= ENVIO_GRATIS_META) { freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>'; }
 
@@ -329,7 +319,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (MODIFICADA: EFECTIVO SI/NO)
+// 8. VISTA RÁPIDA (MODIFICADA)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -338,7 +328,6 @@ function openQuickView(id) {
     currentOpenProductId = id;
     addToHistory(id);
     
-    // <--- ZOOM & IMAGEN --->
     const imgContainer = document.querySelector('.qv-image-col');
     const img = document.getElementById('qv-img');
     img.src = p.img;
@@ -350,7 +339,6 @@ function openQuickView(id) {
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
-    // <--- URGENCIA: Personas viendo --->
     const viewers = Math.floor(Math.random() * 20) + 5;
     if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
 
@@ -363,34 +351,22 @@ function openQuickView(id) {
     if(priceBox) priceBox.innerHTML = priceHtml;
     else document.getElementById('qv-price').innerHTML = priceHtml; 
 
-    // <--- CALCULADORA DE PAGOS (SOLO EFECTIVO) --->
     let paymentInfo = document.getElementById('qv-payment-info');
     if(paymentInfo) paymentInfo.remove(); 
-    
-    if (p.promoCash) { // SOLO SI EL ADMIN LO ACTIVÓ
+    if (p.promoCash) {
         paymentInfo = document.createElement('div');
         paymentInfo.id = 'qv-payment-info';
         paymentInfo.style.cssText = "background: rgba(108, 92, 231, 0.08); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--primary); display: flex; flex-direction: column; gap: 8px;";
-        
         const cashPrice = (p.price * 0.9).toLocaleString('es-AR'); 
-        
-        paymentInfo.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <i class="ph ph-money" style="color:var(--primary); font-size:1.4rem;"></i>
-                <span style="font-size:0.9rem; color:var(--text-main);">
-                    Efectivo (10% OFF): <strong style="color:#27ae60;">$${cashPrice}</strong>
-                </span>
-            </div>
-        `;
+        paymentInfo.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><i class="ph ph-money" style="color:var(--primary); font-size:1.4rem;"></i><span style="font-size:0.9rem; color:var(--text-main);">Efectivo (10% OFF): <strong style="color:#27ae60;">$${cashPrice}</strong></span></div>`;
         if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
     }
 
-    // <--- STOCK INTELIGENTE (NO BAJA DE 1) --->
     let stockAlert = document.getElementById('qv-stock-alert');
     if(stockAlert) stockAlert.remove(); 
     let currentStock = 0;
     if (stockMemory[id]) {
-        if (stockMemory[id] > 1) { stockMemory[id]--; } // <-- AQUÍ ESTÁ LA LÓGICA MÍNIMO 1
+        if (stockMemory[id] > 1) { stockMemory[id]--; } 
         currentStock = stockMemory[id];
     } else { currentStock = Math.floor(Math.random() * 6) + 5; }
     stockMemory[id] = currentStock;
@@ -406,7 +382,6 @@ function openQuickView(id) {
     addBtn.parentNode.insertBefore(stockAlert, addBtn);
     addBtn.onclick = function() { addToCart(p.id, this); closeQuickViewForce(); };
 
-    // <--- BOTÓN COMPARTIR --->
     let shareBtn = document.getElementById('qv-share-btn');
     if (!shareBtn) {
         shareBtn = document.createElement('button');
@@ -421,20 +396,25 @@ function openQuickView(id) {
         try { if (navigator.share) { await navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} en: ${shareData.url}`); showToast("¡Link copiado!"); } } catch (err) { console.log(err); }
     };
 
-    // <--- VENTA CRUZADA (CROSS-SELLING) --->
     const relatedContainer = document.getElementById('qv-related-container');
     if(relatedContainer) {
         relatedContainer.innerHTML = '';
-        const related = allProducts.filter(item => item.category === p.category && String(item.id) !== id).slice(0, 2);
+        const related = allProducts.filter(item => item.category === p.category && String(item.id) !== id).slice(0, 3); 
         if(related.length > 0) {
+            const relatedTitle = document.createElement('h4');
+            relatedTitle.style.cssText = "margin-top: 20px; margin-bottom: 10px; font-size: 0.95rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;";
+            relatedTitle.innerText = "También te podría gustar:";
+            relatedContainer.parentNode.insertBefore(relatedTitle, relatedContainer); 
+            
             related.forEach(rel => {
                 const relDiv = document.createElement('div');
                 relDiv.className = 'related-card';
-                relDiv.onclick = () => openQuickView(rel.id);
-                relDiv.innerHTML = `<img src="${rel.img}"> <div class="related-info"><h5>${rel.name}</h5><span>$${rel.price.toLocaleString()}</span></div>`;
+                relDiv.style.cssText = "display: flex; gap: 10px; align-items: center; background: var(--input-bg); padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; border: 1px solid var(--border-color);";
+                relDiv.onclick = () => openQuickView(rel.id); 
+                relDiv.innerHTML = `<img src="${rel.img}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"> <div class="related-info"><h5 style="font-size: 0.85rem; margin: 0; color: var(--text-main);">${rel.name}</h5><span style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">$${rel.price.toLocaleString()}</span></div>`;
                 relatedContainer.appendChild(relDiv);
             });
-        } else { relatedContainer.innerHTML = '<p style="font-size:0.8rem; color:#999;">No hay productos similares.</p>'; }
+        } else { relatedContainer.innerHTML = ''; }
     }
 
     switchTab('details');
@@ -508,7 +488,6 @@ function renderCheckoutItems() {
                 </label>
             </div>
         </div>
-
         <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">2. Método de Entrega:</label>
             <div style="display:flex;gap:10px;">
@@ -519,27 +498,21 @@ function renderCheckoutItems() {
                     <input type="radio" name="delivery" value="envio" onchange="updateCheckoutRules()"> Envío a Domicilio
                 </label>
             </div>
-            
             <div id="address-container" style="display:none; margin-top:10px; background: #f8f9fa; padding:10px; border-radius:6px;">
                 <label style="display:block;font-size:0.8rem;margin-bottom:3px;">Dirección de Entrega:</label>
                 <input type="text" id="client-address" placeholder="Calle, Altura, Localidad..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
-                <p style="font-size:0.75rem; color:#636e72; line-height:1.3;">
-                    <i class="ph ph-info"></i> <strong>Importante:</strong> En Haedo el envío es GRATIS. Resto de zonas sujeto a tarifa de Correo Andreani (se confirma por WhatsApp).
-                </p>
+                <p style="font-size:0.75rem; color:#636e72; line-height:1.3;"><i class="ph ph-info"></i> <strong>Importante:</strong> En Haedo el envío es GRATIS. Resto de zonas sujeto a tarifa de Correo Andreani (se confirma por WhatsApp).</p>
             </div>
         </div>
-
         <div style="margin-bottom:15px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">3. Tus Datos:</label>
             <input type="text" id="client-name" placeholder="Tu Nombre" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:10px;">
             <input type="tel" id="client-phone" placeholder="Tu Celular (Para coordinar)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;">
         </div>
-
         <div style="margin-bottom:10px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;">Notas / Aclaraciones:</label>
             <textarea id="client-notes" placeholder="Ej: Es para regalo, no funciona el timbre..." rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;"></textarea>
         </div>
-
         <div style="border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
             <h4 style="font-size:0.9rem;margin-bottom:5px;">Productos:</h4>
             <div style="max-height: 120px; overflow-y: auto; padding-right: 5px; border: 1px solid #eee; border-radius: 6px; padding: 5px;">
@@ -556,7 +529,6 @@ function updateCheckoutRules() {
     const lblEnvio = document.getElementById('lbl-envio');
     const addressContainer = document.getElementById('address-container');
 
-    // REGLA: Si es Efectivo, bloqueo Envío (solo retiro)
     if (payment === 'cash') {
         deliveryRadios[0].checked = true;
         deliveryRadios[1].disabled = true;
@@ -570,13 +542,9 @@ function updateCheckoutRules() {
         lblEnvio.title = "";
     }
 
-    // REGLA: Mostrar Dirección solo si eligió Envío
     const delivery = document.querySelector('input[name="delivery"]:checked').value;
-    if (delivery === 'envio') {
-        addressContainer.style.display = 'block';
-    } else {
-        addressContainer.style.display = 'none';
-    }
+    if (delivery === 'envio') { addressContainer.style.display = 'block'; } 
+    else { addressContainer.style.display = 'none'; }
 
     updateCheckoutTotal();
 }
@@ -590,9 +558,8 @@ function updateCheckoutTotal() {
 
     const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
     if (paymentMethod === 'cash') {
-        // Recorrer carrito y sumar descuento solo de items habilitados
         cart.forEach(item => {
-            if (item.promoCash) { // Si el producto tiene el flag activado en Admin
+            if (item.promoCash) { 
                 const itemTotal = item.price * item.qty;
                 paymentDisc += itemTotal * 0.10;
             }
@@ -646,15 +613,10 @@ function sendToWhatsApp() {
 
     const paymentVal = document.querySelector('input[name="payment"]:checked').value;
     const paymentText = paymentVal === "cash" ? "Efectivo" : "Transferencia / MP";
-    
     const finalTotal = document.getElementById('modal-total-price').innerText;
 
     let msg = `Hola! 👋 Soy *${name}*.\nQuiero confirmar mi pedido:\n\n`;
-    
-    cart.forEach(i => { 
-        msg += `▪️ ${i.qty}x ${i.name}\n`; 
-    });
-    
+    cart.forEach(i => { msg += `▪️ ${i.qty}x ${i.name}\n`; });
     msg += `\n📞 *Teléfono:* ${phone}`;
     msg += `\n📦 *Entrega:* ${deliveryText}`;
     if (addressText) msg += addressText; 
@@ -662,11 +624,16 @@ function sendToWhatsApp() {
     msg += `\n📝 *Notas:* ${notes}`;
     msg += `\n\n💰 *TOTAL FINAL: ${finalTotal}*`;
     
-    window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
+    const WHATSAPP_CLEAN = NUMERO_WHATSAPP.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${WHATSAPP_CLEAN}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    confettiExplosion();
+    closeCheckoutModal();
+    showToast("¡Pedido generado! Serás redirigido a WhatsApp.", "success");
 }
 
 // =========================================
-// 10. EXTRAS (CHAT, HISTORIAL, NOTIFICACIONES)
+// 10. EXTRAS (CHAT, HISTORIAL, CONFETI, TITULO DINAMICO)
 // =========================================
 function addToHistory(id) {
     id = String(id);
@@ -766,6 +733,39 @@ function showToast(msg, type="success") {
     container.appendChild(toast);
     setTimeout(() => { toast.style.animation = 'toastOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
+
+// CONFETI
+function confettiExplosion() {
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.position = 'fixed';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.width = '10px';
+        confetti.style.height = '10px';
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confetti.style.zIndex = '9999';
+        confetti.style.pointerEvents = 'none';
+        const duration = Math.random() * 3 + 2;
+        confetti.style.transition = `top ${duration}s ease-out, transform ${duration}s linear`;
+        document.body.appendChild(confetti);
+        setTimeout(() => { confetti.style.top = '110vh'; confetti.style.transform = `rotate(${Math.random() * 360}deg)`; }, 100);
+        setTimeout(() => confetti.remove(), duration * 1000);
+    }
+}
+
+// 11. TÍTULO DINÁMICO (NUEVO)
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        if (cart.length > 0) {
+            document.title = `(${cart.reduce((a,b)=>a+b.qty,0)}) 🛒 ¡Vuelve! Tu carrito te espera`;
+        } else {
+            document.title = "💔 ¡Te extrañamos! | El Solar";
+        }
+    } else {
+        document.title = "El Solar by Romina | Tienda Artesanal";
+    }
+});
 
 // INICIALIZACIÓN FINAL
 initStore();

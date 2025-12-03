@@ -12,13 +12,15 @@
 <body>
 
     <div id="login-overlay">
-        <div class="login-box">
+        <form class="login-box" onsubmit="event.preventDefault(); login();">
             <h2>Admin Acceso</h2>
             <p style="margin-bottom:1rem; font-size:0.9rem; color:#666;">Ingresa con tu cuenta de administrador</p>
-            <input type="email" id="admin-email" placeholder="Email" style="margin-bottom:10px; width:100%; padding:10px;">
-            <input type="password" id="admin-pass" placeholder="Contraseña" style="margin-bottom:10px; width:100%; padding:10px;">
-            <button class="submit-btn" onclick="login()">Entrar de forma segura</button>
-        </div>
+            
+            <input type="email" id="admin-email" placeholder="Email" autocomplete="username" style="margin-bottom:10px; width:100%; padding:10px;">
+            <input type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password" style="margin-bottom:10px; width:100%; padding:10px;">
+            
+            <button type="submit" class="submit-btn">Entrar de forma segura</button>
+        </form>
     </div>
 
     <div class="admin-container" id="admin-content" style="display:none;"> 
@@ -29,6 +31,7 @@
                 <button onclick="exportToCSV()" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;">
                     <i class="ph ph-microsoft-excel-logo"></i> Descargar Excel
                 </button>
+                
                 <button onclick="resetStock()" style="background:#ff7675; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">⚠ Reset Fábrica</button>
                 <button onclick="logout()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.8rem;">Cerrar Sesión</button>
                 <a href="index.html" class="hero-btn" style="font-size:0.8rem; padding: 8px 20px;">Ir a Tienda</a>
@@ -37,6 +40,7 @@
 
         <div class="admin-card">
             <h3>📂 Categorías y Subcategorías</h3>
+            
             <div class="form-row" style="align-items:flex-end;">
                 <div class="form-group">
                     <label>Nueva Categoría Principal</label>
@@ -44,7 +48,9 @@
                 </div>
                 <button onclick="addCategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Crear Cat.</button>
             </div>
+            
             <hr style="margin: 20px 0; border-color: var(--border-color); opacity: 0.3;">
+
             <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.02); border-radius: 10px;">
                 <h4 style="margin-bottom:10px; color: var(--text-main);">Agregar Subcategoría</h4>
                 <div class="form-row" style="align-items:flex-end;">
@@ -59,6 +65,7 @@
                     <button onclick="addSubcategory()" class="submit-btn" style="margin-bottom: 1.5rem;">Agregar Sub</button>
                 </div>
             </div>
+
             <div id="categories-list" style="margin-top:20px;"></div>
         </div>
 

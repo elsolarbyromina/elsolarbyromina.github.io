@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artículo | El Solar by Romina</title>
+    <link rel="icon" type="image/png" href="logo/logo romina.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="header-container"></div>
+
+    <header class="article-hero" style="background-image: url('https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=1600&q=80');">
+        <div class="article-header-content">
+            <span class="article-tag">Novedades</span>
+            <h1 class="article-title">Título de tu Noticia Impactante</h1>
+            <div class="article-meta">
+                <span><i class="ph ph-calendar"></i> 10 Noviembre 2025</span>
+                <span><i class="ph ph-user"></i> Por Romina</span>
+            </div>
+        </div>
+    </header>
+
+    <article class="article-body">
+        <p class="reveal">Aquí escribes el primer párrafo de tu noticia. Es un espacio ideal para contar historias, conectar con tus clientes y mostrar el lado humano de tu marca.</p>
+
+        <h2 class="reveal">Un subtítulo interesante</h2>
+        <p class="reveal">Sigue contando detalles. Puedes explicar cómo hiciste los productos, qué materiales usaste o cómo fue la experiencia en la feria.</p>
+
+        <blockquote class="article-quote reveal">
+            "La artesanía no es solo un producto, es un pedacito de tiempo y amor entregado en tus manos."
+        </blockquote>
+
+        <p class="reveal">Más texto interesante para tus lectores...</p>
+
+        <img src="https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80" class="article-img-content reveal" alt="Detalle">
+
+        <div class="share-bar reveal">
+            <span>¿Te gustó? Compártelo:</span>
+            <div class="social-icons">
+                <a href="#" style="color:#25D366"><i class="ph ph-whatsapp-logo"></i></a>
+                <a href="#" style="color:#3b5998"><i class="ph ph-facebook-logo"></i></a>
+            </div>
+        </div>
+
+        <div style="background: var(--input-bg); padding: 30px; border-radius: 15px; text-align: center; margin-top: 2rem;" class="reveal">
+            <h3 style="color: var(--primary); margin-bottom: 10px;">¿Te inspiraste?</h3>
+            <p style="margin-bottom: 20px;">Mira los productos mencionados en esta nota.</p>
+            <button class="hero-btn" onclick="window.location.href='index.html'">Ir a la Tienda</button>
+        </div>
+
+    </article>
+
+    <div id="footer-container"></div>
+
+    <a href="https://wa.me/5491168722917" target="_blank" class="float-wa" title="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>
+    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="cart-header"><h2>Tu Pedido</h2><button class="close-cart" onclick="toggleCart()"><i class="ph ph-x"></i></button></div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-footer"><div class="total-row"><span>Total:</span><span id="cart-total">$0</span></div><button class="whatsapp-btn" onclick="openCheckoutModal()">Confirmar</button></div>
+    </div>
+    
+    <div class="checkout-overlay" id="checkout-overlay"><div class="checkout-modal"><div class="modal-header"><h3>Resumen</h3><button onclick="closeCheckoutModal()"><i class="ph ph-x"></i></button></div><div class="modal-body" id="modal-body"></div><div class="modal-total"><div id="modal-subtotal"></div><div id="modal-discount"></div><div>Total: <span id="modal-total-price">$0</span></div></div><button class="confirm-btn" onclick="sendToWhatsApp()">Confirmar</button></div></div>
+
+    <script src="js/components.js"></script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
