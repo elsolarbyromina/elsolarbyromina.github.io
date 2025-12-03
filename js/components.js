@@ -124,6 +124,7 @@ function loadFooter() {
                 <h3>Contacto</h3>
                 <p><i class="ph ph-map-pin"></i> Haedo, Buenos Aires</p>
                 <p><i class="ph ph-envelope"></i> elsolarbyromina@gmail.com </p>
+                <p><i class="ph ph-envelope"></i> ventas@elsolarbyromina.com </p>
                 <p><i class="ph ph-whatsapp-logo"></i> +54 9 11 6872 2917</p>
             </div>
             
