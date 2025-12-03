@@ -123,8 +123,8 @@ function loadFooter() {
             <div class="footer-column">
                 <h3>Contacto</h3>
                 <p><i class="ph ph-map-pin"></i> Haedo, Buenos Aires</p>
-                <p><i class="ph ph-envelope"></i> elsolarbyromina@gmail.com </p>
-                <p><i class="ph ph-envelope"></i> ventas@elsolarbyromina.com </p>
+                <p><i class="ph ph-envelope"></i> ventas@elsolarbyromina.com</p>
+                <p><i class="ph ph-envelope"></i> elsolarbyromina@gmail.com</p>
                 <p><i class="ph ph-whatsapp-logo"></i> +54 9 11 6872 2917</p>
             </div>
             
@@ -147,7 +147,10 @@ function loadFooter() {
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2025 Mi Marca Artesanal. Todos los derechos reservados.</p>
+            <p>
+                &copy; 2025 El Solar by Romina. Todos los derechos reservados.
+                <br> Desarrollado por <a href="https://riramcsoporte.github.io/" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: bold;">RIRAMCSOPORTE</a>
+            </p>
         </div>
     </footer>
     `;

@@ -988,3 +988,15 @@ body.dark-mode .top-bar {
     .checkout-modal label { font-size: 0.8rem; }
     .checkout-modal input, .checkout-modal textarea { padding: 8px; font-size: 0.9rem; }
 }
+
+/* Estilo para la firma del desarrollador */
+.footer-bottom a {
+    transition: 0.3s;
+    opacity: 0.8;
+}
+
+.footer-bottom a:hover {
+    opacity: 1;
+    text-decoration: underline;
+    color: #a29bfe !important; /* Un tono más brillante al pasar el mouse */
+}
