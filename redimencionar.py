@@ -1,13 +1,13 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-from PIL import Image, ImageOps, ImageTk, ImageDraw # Agregamos ImageDraw para el recorte
+from PIL import Image, ImageOps, ImageTk, ImageDraw
 import os
 
 class ImageToolApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Herramientas Romina v5 - Con Recorte Circular")
-        self.root.geometry("600x720") # Un poco más alto
+        self.root.title("Herramientas Romina v7 - Compresión Máxima")
+        self.root.geometry("600x780") 
         self.root.resizable(False, False)
 
         # --- Estilos ---
@@ -39,9 +39,11 @@ class ImageToolApp:
         self.keep_aspect_ratio = tk.BooleanVar(value=True)
         self.watermark_path = tk.StringVar()
         self.watermark_position = tk.StringVar(value="Abajo Derecha")
-        
-        # NUEVA VARIABLE PARA EL RECORTE
         self.round_watermark = tk.BooleanVar(value=False)
+        
+        # Variables de Calidad
+        self.quality_val = tk.IntVar(value=90)
+        self.aggressive_compression = tk.BooleanVar(value=False) # NUEVA VARIABLE
 
         # 1. Ubicaciones
         frame_folders = ttk.LabelFrame(parent, text="1. Ubicaciones", padding=10)
@@ -83,22 +85,34 @@ class ImageToolApp:
                                       state="readonly", textvariable=self.watermark_position, width=15)
         self.combo_pos.grid(row=1, column=1, sticky="w", padx=5, pady=5)
 
-        # --- NUEVO CHECKBOX ---
         ttk.Checkbutton(frame_watermark, text="✂️ Recortar logo en forma redonda (Automático)", 
                         variable=self.round_watermark).grid(row=2, column=0, columnspan=3, sticky="w", pady=(10,0))
 
 
-        # 4. Formato y Botones
-        frame_action = ttk.Frame(parent, padding=10)
-        frame_action.pack(fill="x", padx=10)
+        # 4. Formato, Calidad y Botones
+        frame_action = ttk.LabelFrame(parent, text="4. Salida y Optimización", padding=10)
+        frame_action.pack(fill="x", padx=10, pady=5)
         
-        ttk.Label(frame_action, text="Formato Salida:").pack(anchor="w")
-        self.combo_format = ttk.Combobox(frame_action, values=["JPG", "PNG", "WEBP"], state="readonly", textvariable=self.target_format)
-        self.combo_format.pack(fill="x", pady=5)
+        # Fila 1: Formato
+        ttk.Label(frame_action, text="Formato:").grid(row=0, column=0, sticky="w")
+        self.combo_format = ttk.Combobox(frame_action, values=["JPG", "PNG", "WEBP"], state="readonly", width=10, textvariable=self.target_format)
+        self.combo_format.grid(row=0, column=1, sticky="w", padx=5)
         self.combo_format.current(0)
 
-        ttk.Button(frame_action, text="👁️ PREVISUALIZAR", command=self.preview_image).pack(pady=(10, 5), fill="x")
-        ttk.Button(frame_action, text="⚡ PROCESAR LOTE", style="Big.TButton", command=self.process_images).pack(pady=5, fill="x", ipady=5)
+        # Fila 1: Calidad (Slider)
+        ttk.Label(frame_action, text="Calidad / Peso:").grid(row=0, column=2, sticky="e", padx=(15, 5))
+        scale_quality = tk.Scale(frame_action, from_=10, to=100, orient="horizontal", variable=self.quality_val, length=140)
+        scale_quality.grid(row=0, column=3, sticky="w")
+
+        # Fila 2: Checkbox Compresión agresiva (NUEVO)
+        ttk.Checkbutton(frame_action, text="🔥 Compresión Máxima (Solo JPG - Reduce color)", 
+                        variable=self.aggressive_compression).grid(row=1, column=0, columnspan=4, sticky="w", pady=(10,0))
+        
+        # Botones
+        frame_btns = ttk.Frame(parent)
+        frame_btns.pack(fill="x", padx=10, pady=5)
+        ttk.Button(frame_btns, text="👁️ PREVISUALIZAR", command=self.preview_image).pack(pady=(5, 5), fill="x")
+        ttk.Button(frame_btns, text="⚡ PROCESAR LOTE", style="Big.TButton", command=self.process_images).pack(pady=5, fill="x", ipady=5)
         
         self.lbl_status_resize = ttk.Label(parent, text="Esperando...", foreground="gray")
         self.lbl_status_resize.pack(pady=5)
@@ -147,7 +161,7 @@ class ImageToolApp:
             return -1, -1
 
     # ====================================================================
-    #           LÓGICA DE PROCESAMIENTO (¡AQUÍ ESTÁ LA MAGIA!)
+    #           LÓGICA DE PROCESAMIENTO
     # ====================================================================
     def process_single_image_in_memory(self, img_path, w_req, h_req, watermark_img, position_str):
         with Image.open(img_path) as img:
@@ -179,26 +193,18 @@ class ImageToolApp:
             if watermark_img:
                 wm_copy = watermark_img.copy()
 
-                # --- LÓGICA DE RECORTE CIRCULAR (NUEVO) ---
+                # --- LÓGICA DE RECORTE CIRCULAR ---
                 if self.round_watermark.get():
-                    # a. Convertir a RGBA para tener transparencia
                     wm_copy = wm_copy.convert("RGBA")
-                    
-                    # b. Hacerla cuadrada (recorta lo que sobre de los lados para centrar)
                     min_side = min(wm_copy.size)
                     wm_copy = ImageOps.fit(wm_copy, (min_side, min_side), centering=(0.5, 0.5))
                     
-                    # c. Crear máscara circular
                     mask = Image.new('L', (min_side, min_side), 0)
                     draw = ImageDraw.Draw(mask)
                     draw.ellipse((0, 0, min_side, min_side), fill=255)
-                    
-                    # d. Aplicar la máscara al canal alfa de la imagen
-                    # Esto hace transparente todo lo que esté fuera del círculo blanco
                     wm_copy.putalpha(mask)
-                # ------------------------------------------
 
-                # Redimensionar el logo (proporcional al 20% de la foto)
+                # Redimensionar el logo
                 wm_ratio = (new_w * 0.20) / wm_copy.width
                 wm_w, wm_h = int(new_w * 0.20), int(wm_copy.height * wm_ratio)
                 wm_copy = wm_copy.resize((wm_w, wm_h), Image.Resampling.LANCZOS)
@@ -230,7 +236,6 @@ class ImageToolApp:
         
         watermark_img = None
         if wm_path and os.path.exists(wm_path): 
-            # Cargamos la imagen original, el recorte se hace en memoria después
             watermark_img = Image.open(wm_path)
 
         try:
@@ -258,6 +263,12 @@ class ImageToolApp:
         
         wm_path = self.watermark_path.get()
         w_req, h_req = self.get_dimensions()
+        quality_setting = self.quality_val.get()
+        
+        # LOGICA SUBSAMPLING (NUEVO)
+        # subsampling=0: Mantiene todo el color (4:4:4)
+        # subsampling=2: Reduce info de color (4:2:0) -> Menor peso
+        subsampling_val = 2 if self.aggressive_compression.get() else 0
 
         if not src or not dst: messagebox.showwarning("Falta datos", "Revisa las carpetas."); return
         
@@ -282,9 +293,10 @@ class ImageToolApp:
                 if fmt == "jpg":
                     bg = Image.new("RGB", final.size, (255, 255, 255))
                     bg.paste(final, mask=final.split()[3])
-                    bg.save(save_path, quality=95, optimize=True)
+                    # AQUI SE APLICA LA MAGIA DE LA COMPRESIÓN EXTRA
+                    bg.save(save_path, quality=quality_setting, optimize=True, subsampling=subsampling_val)
                 elif fmt == "webp":
-                    final.save(save_path, quality=95, method=6)
+                    final.save(save_path, quality=quality_setting, method=6)
                 else:
                     final.save(save_path, optimize=True)
                 count += 1

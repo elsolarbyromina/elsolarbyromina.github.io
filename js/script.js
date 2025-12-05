@@ -4,7 +4,7 @@
 import { db } from './config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// EXPOSICIÓN DE FUNCIONES
+// EXPOSICIÓN DE FUNCIONES AL HTML
 window.toggleCart = toggleCart;
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
@@ -34,22 +34,27 @@ window.startVoiceSearch = startVoiceSearch;
 window.goToSlide = goToSlide;
 window.updateCheckoutRules = updateCheckoutRules;
 
-// CONSTANTES
+// CONSTANTES GLOBALES
 const NUMERO_WHATSAPP = "5491168722917"; 
 const ENVIO_GRATIS_META = 150000; 
-const MOSTRAR_POPUP_PROMO = false; 
+const MOSTRAR_POPUP_PROMO = false; // Cambiar a true para activar
 
-// ESTADO
+// =========================================
+// 2. ESTADO DE LA APLICACIÓN
+// =========================================
 let allProducts = [];       
 let currentProducts = [];   
 let categoriesData = [];    
 let activeCoupons = [];     
+
+// Persistencia de datos
 let cart = JSON.parse(localStorage.getItem('cart')) || []; 
 let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+let stockMemory = JSON.parse(localStorage.getItem('stock_memory')) || {};
+let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
+
 let discount = 0;
 let currentOpenProductId = null;
-let reviews = JSON.parse(localStorage.getItem('reviews')) || {}; 
-let stockMemory = JSON.parse(localStorage.getItem('stock_memory')) || {};
 
 const grid = document.getElementById('products-container');
 const title = document.getElementById('current-section-title');
@@ -58,6 +63,7 @@ const title = document.getElementById('current-section-title');
 // 3. INICIALIZACIÓN
 // =========================================
 async function initStore() {
+    // 1. Efecto Visual: Skeletons
     showSkeletons();
 
     try {
@@ -84,21 +90,29 @@ async function initStore() {
 
         if (allProducts.length === 0) {
             if(grid) grid.innerHTML = "<p style='text-align:center; padding:2rem;'>No hay productos cargados.</p>";
-        } else { filterByMain('all'); }
+        } else {
+            filterByMain('all');
+        }
 
+        // Iniciar funcionalidades extra
         initSlider();
         renderHistory();
         updateCartUI(); 
         setTimeout(setupLiveSearch, 1000); 
         setTimeout(showSalesNotification, 10000);
+        setupRetentionTools(); // Retención de clientes
         
+        // Popup Promo (si está activo)
         setTimeout(() => { 
             if(MOSTRAR_POPUP_PROMO && !sessionStorage.getItem('promoShown') && document.getElementById('promo-overlay')) {
                 document.getElementById('promo-overlay').classList.add('active'); 
             }
         }, 3000);
 
-    } catch (error) { console.error("Error Firebase:", error); }
+    } catch (error) {
+        console.error("Error Firebase:", error);
+        if(grid) grid.innerHTML = '<p style="text-align:center; padding:2rem; color:red;">Error de conexión.</p>';
+    }
 }
 
 // =========================================
@@ -126,17 +140,23 @@ function setupLiveSearch() {
     const searchInput = document.getElementById('search-input');
     const searchBox = document.querySelector('.search-box');
     if (!searchInput || !searchBox) return;
+    
+    // Inyectar estilos para el desplegable
     const style = document.createElement('style');
     style.innerHTML = `.live-search-results { position: absolute; top: 100%; left: 0; width: 250px; background: var(--bg-card); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5000; overflow: hidden; display: none; border: 1px solid var(--border-color); } .live-item { display: flex; align-items: center; padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; } .live-item:hover { background: var(--input-bg); } .live-item img { width: 40px; height: 40px; border-radius: 5px; object-fit: cover; margin-right: 10px; } .live-info h4 { font-size: 0.85rem; margin: 0; color: var(--text-main); } .live-info span { font-size: 0.8rem; font-weight: bold; color: var(--primary); }`;
     document.head.appendChild(style);
+
     const resultsContainer = document.createElement('div');
     resultsContainer.className = 'live-search-results';
     searchBox.style.position = 'relative'; 
     searchBox.appendChild(resultsContainer);
+
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase().trim();
         if (term.length < 2) { resultsContainer.style.display = 'none'; return; }
+        
         const matches = allProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.toLowerCase().includes(term))).slice(0, 5);
+        
         if (matches.length > 0) {
             resultsContainer.innerHTML = '';
             matches.forEach(p => {
@@ -149,9 +169,13 @@ function setupLiveSearch() {
             resultsContainer.style.display = 'block';
         } else { resultsContainer.style.display = 'none'; }
     });
+
     document.addEventListener('click', (e) => { if (!searchBox.contains(e.target)) { resultsContainer.style.display = 'none'; } });
 }
 
+// =========================================
+// 5. MENÚ Y FILTROS
+// =========================================
 function renderDynamicMenu() {
     const menuContainer = document.querySelector('.menu-scroll-content');
     if (!menuContainer) return;
@@ -190,6 +214,10 @@ function startVoiceSearch() { if (!('webkitSpeechRecognition' in window)) { aler
 function sortProducts(criteria) { let sorted = [...currentProducts]; switch(criteria) { case 'price-asc': sorted.sort((a, b) => a.price - b.price); break; case 'price-desc': sorted.sort((a, b) => b.price - a.price); break; case 'alpha-asc': sorted.sort((a, b) => a.name.localeCompare(b.name)); break; default: sorted.sort((a, b) => a.id - b.id); break; } renderFiltered(sorted, false); }
 function setGridView() { document.getElementById('products-container').classList.remove('list-view'); document.querySelectorAll('.view-btn')[0].classList.add('active'); document.querySelectorAll('.view-btn')[1].classList.remove('active'); }
 function setListView() { document.getElementById('products-container').classList.add('list-view'); document.querySelectorAll('.view-btn')[0].classList.remove('active'); document.querySelectorAll('.view-btn')[1].classList.add('active'); }
+
+// =========================================
+// 6. RENDERIZADO (CORE)
+// =========================================
 function renderWithAnimation(cb) { if (!grid) return; grid.style.opacity = '0'; setTimeout(() => { cb(); grid.style.opacity = '1'; }, 200); }
 
 function renderFiltered(list, animate = true) {
@@ -208,20 +236,26 @@ function createProductCard(p) {
     const isFav = wishlist.includes(p.id) ? 'active' : '';
     const heartIcon = wishlist.includes(p.id) ? 'ph-heart-fill' : 'ph-heart';
     const prodReviews = reviews[p.id] || [];
+    
     let ratingHTML = '';
     if (prodReviews.length > 0) {
         const avg = prodReviews.reduce((acc, r) => acc + parseInt(r.rating), 0) / prodReviews.length;
         const stars = "★".repeat(Math.round(avg)) + "☆".repeat(5 - Math.round(avg));
         ratingHTML = `<div class="star-rating"><span class="star-gold">${stars}</span> <small>(${prodReviews.length})</small></div>`;
     }
+    
     let priceHTML = `<div class="card-price">$${p.price.toLocaleString()}</div>`;
     if(p.oldPrice && p.oldPrice > p.price) {
         const off = Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100);
         priceHTML = `<div class="card-price"><span class="old-price">$${p.oldPrice.toLocaleString()}</span> $${p.price.toLocaleString()}</div>`;
         if(!p.badge) badgeHTML = `<span class="card-badge badge-offer">-${off}% OFF</span>`;
     }
+
+    // Etiqueta Envío Gratis
     let freeShipHTML = "";
-    if (p.price >= ENVIO_GRATIS_META) { freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>'; }
+    if (p.price >= ENVIO_GRATIS_META) { 
+        freeShipHTML = '<span style="display:block; font-size:0.75rem; color:#2ecc71; font-weight:600; margin-top:5px;"><i class="ph ph-truck"></i> Envío Gratis</span>'; 
+    }
 
     const card = document.createElement('div');
     card.className = 'card reveal';
@@ -243,6 +277,9 @@ function createProductCard(p) {
     grid.appendChild(card);
 }
 
+// =========================================
+// 7. CARRITO & WISHLIST
+// =========================================
 function toggleWishlist(id, btn) {
     id = String(id);
     const idx = wishlist.indexOf(id);
@@ -304,7 +341,14 @@ function updateCartUI() {
     else { 
         cart.forEach(item => { 
             total += item.price * item.qty; 
-            itemsEl.innerHTML += `<div class="cart-item"><div class="item-info"><h4>${item.name}</h4><small>$${item.price.toLocaleString()}</small></div><div class="item-controls"><button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button><span>${item.qty}</span><button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button><button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;font-size:1.2rem;"><i class="ph ph-trash"></i></button></div></div>`; 
+            itemsEl.innerHTML += `
+            <div class="cart-item">
+                <div class="item-info"><h4>${item.name}</h4><small>$${item.price.toLocaleString()}</small></div>
+                <div class="item-controls">
+                    <button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">-</button><span>${item.qty}</span><button class="qty-btn" onclick="window.changeQty('${item.id}', 1)">+</button>
+                    <button onclick="window.removeFromCart('${item.id}')" style="border:none;background:none;color:red;cursor:pointer;margin-left:5px;font-size:1.2rem;"><i class="ph ph-trash"></i></button>
+                </div>
+            </div>`; 
         }); 
     }
     totalEl.innerText = '$' + total.toLocaleString();
@@ -319,7 +363,7 @@ function updateCartUI() {
 function toggleCart(force) { const sb = document.getElementById('sidebar'); const ov = document.getElementById('overlay'); if(!sb || !ov) return; if(force) { sb.classList.add('open'); ov.classList.add('active'); } else { sb.classList.toggle('open'); ov.classList.toggle('active'); } }
 
 // =========================================
-// 8. VISTA RÁPIDA (MODIFICADA)
+// 8. VISTA RÁPIDA (FULL: ZOOM + PAGOS + STOCK + COMPARTIR + VENTA CRUZADA)
 // =========================================
 function openQuickView(id) {
     id = String(id);
@@ -328,6 +372,7 @@ function openQuickView(id) {
     currentOpenProductId = id;
     addToHistory(id);
     
+    // ZOOM
     const imgContainer = document.querySelector('.qv-image-col');
     const img = document.getElementById('qv-img');
     img.src = p.img;
@@ -339,6 +384,7 @@ function openQuickView(id) {
     document.getElementById('qv-cat').innerText = `${catObj ? catObj.name : p.category} > ${p.sub || ''}`;
     document.getElementById('qv-title').innerText = p.name;
     
+    // Urgencia
     const viewers = Math.floor(Math.random() * 20) + 5;
     if(document.getElementById('qv-viewers')) document.getElementById('qv-viewers').innerText = viewers;
 
@@ -351,6 +397,7 @@ function openQuickView(id) {
     if(priceBox) priceBox.innerHTML = priceHtml;
     else document.getElementById('qv-price').innerHTML = priceHtml; 
 
+    // CALCULADORA EFECTIVO (10% OFF)
     let paymentInfo = document.getElementById('qv-payment-info');
     if(paymentInfo) paymentInfo.remove(); 
     if (p.promoCash) {
@@ -362,6 +409,7 @@ function openQuickView(id) {
         if(priceBox && priceBox.parentNode) { priceBox.parentNode.insertBefore(paymentInfo, priceBox.nextSibling); }
     }
 
+    // STOCK INTELIGENTE (Baja hasta 1)
     let stockAlert = document.getElementById('qv-stock-alert');
     if(stockAlert) stockAlert.remove(); 
     let currentStock = 0;
@@ -382,6 +430,7 @@ function openQuickView(id) {
     addBtn.parentNode.insertBefore(stockAlert, addBtn);
     addBtn.onclick = function() { addToCart(p.id, this); closeQuickViewForce(); };
 
+    // BOTÓN COMPARTIR
     let shareBtn = document.getElementById('qv-share-btn');
     if (!shareBtn) {
         shareBtn = document.createElement('button');
@@ -396,6 +445,7 @@ function openQuickView(id) {
         try { if (navigator.share) { await navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} en: ${shareData.url}`); showToast("¡Link copiado!"); } } catch (err) { console.log(err); }
     };
 
+    // VENTA CRUZADA
     const relatedContainer = document.getElementById('qv-related-container');
     if(relatedContainer) {
         relatedContainer.innerHTML = '';
@@ -459,7 +509,7 @@ function submitReview() {
 }
 
 // =========================================
-// 9. CHECKOUT INTELIGENTE
+// 9. CHECKOUT INTELIGENTE (REGLAS DE NEGOCIO Y DIRECCIÓN)
 // =========================================
 function openCheckoutModal() {
     if(cart.length === 0) { showToast("Carrito vacío", "error"); return; }
@@ -488,6 +538,7 @@ function renderCheckoutItems() {
                 </label>
             </div>
         </div>
+
         <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">2. Método de Entrega:</label>
             <div style="display:flex;gap:10px;">
@@ -498,21 +549,27 @@ function renderCheckoutItems() {
                     <input type="radio" name="delivery" value="envio" onchange="updateCheckoutRules()"> Envío a Domicilio
                 </label>
             </div>
+            
             <div id="address-container" style="display:none; margin-top:10px; background: #f8f9fa; padding:10px; border-radius:6px;">
                 <label style="display:block;font-size:0.8rem;margin-bottom:3px;">Dirección de Entrega:</label>
                 <input type="text" id="client-address" placeholder="Calle, Altura, Localidad..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
-                <p style="font-size:0.75rem; color:#636e72; line-height:1.3;"><i class="ph ph-info"></i> <strong>Importante:</strong> En Haedo el envío es GRATIS. Resto de zonas sujeto a tarifa de Correo Andreani (se confirma por WhatsApp).</p>
+                <p style="font-size:0.75rem; color:#636e72; line-height:1.3;">
+                    <i class="ph ph-info"></i> <strong>Importante:</strong> En Haedo el envío es GRATIS. Resto de zonas sujeto a tarifa de Correo Andreani (se confirma por WhatsApp).
+                </p>
             </div>
         </div>
+
         <div style="margin-bottom:15px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;font-weight:600;">3. Tus Datos:</label>
             <input type="text" id="client-name" placeholder="Tu Nombre" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:10px;">
             <input type="tel" id="client-phone" placeholder="Tu Celular (Para coordinar)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;">
         </div>
+
         <div style="margin-bottom:10px;">
             <label style="display:block;font-size:0.85rem;margin-bottom:5px;">Notas / Aclaraciones:</label>
             <textarea id="client-notes" placeholder="Ej: Es para regalo, no funciona el timbre..." rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;"></textarea>
         </div>
+
         <div style="border-top:1px solid #eee; padding-top:10px; margin-top:10px;">
             <h4 style="font-size:0.9rem;margin-bottom:5px;">Productos:</h4>
             <div style="max-height: 120px; overflow-y: auto; padding-right: 5px; border: 1px solid #eee; border-radius: 6px; padding: 5px;">
@@ -529,6 +586,7 @@ function updateCheckoutRules() {
     const lblEnvio = document.getElementById('lbl-envio');
     const addressContainer = document.getElementById('address-container');
 
+    // REGLA: Si es Efectivo, bloqueo Envío (solo retiro)
     if (payment === 'cash') {
         deliveryRadios[0].checked = true;
         deliveryRadios[1].disabled = true;
@@ -542,9 +600,13 @@ function updateCheckoutRules() {
         lblEnvio.title = "";
     }
 
+    // REGLA: Mostrar Dirección solo si eligió Envío
     const delivery = document.querySelector('input[name="delivery"]:checked').value;
-    if (delivery === 'envio') { addressContainer.style.display = 'block'; } 
-    else { addressContainer.style.display = 'none'; }
+    if (delivery === 'envio') {
+        addressContainer.style.display = 'block';
+    } else {
+        addressContainer.style.display = 'none';
+    }
 
     updateCheckoutTotal();
 }
@@ -558,8 +620,9 @@ function updateCheckoutTotal() {
 
     const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
     if (paymentMethod === 'cash') {
+        // Recorrer carrito y sumar descuento solo de items habilitados
         cart.forEach(item => {
-            if (item.promoCash) { 
+            if (item.promoCash) { // Si el producto tiene el flag activado en Admin
                 const itemTotal = item.price * item.qty;
                 paymentDisc += itemTotal * 0.10;
             }
@@ -568,21 +631,28 @@ function updateCheckoutTotal() {
     }
 
     document.getElementById('modal-subtotal').innerText = `Subtotal: $${subtotal.toLocaleString()}`;
+    
     const discElem = document.getElementById('modal-discount');
+    // Mostrar descuentos acumulados (Cupón + Efectivo)
     const totalDiscount = discount + paymentDisc;
+    
     if (totalDiscount > 0) {
         discElem.style.display = 'block';
         discElem.innerText = `Descuento Total: -$${totalDiscount.toLocaleString()}`;
-    } else { discElem.style.display = 'none'; }
+    } else {
+        discElem.style.display = 'none';
+    }
+
     document.getElementById('modal-total-price').innerText = '$' + total.toLocaleString();
 }
 
 function applyCoupon() {
     const code = document.getElementById('coupon-input').value.toUpperCase().trim();
     const msg = document.getElementById('coupon-msg');
+    let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+
     const found = activeCoupons.find(c => c.code === code);
     if (found) {
-        let subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
         discount = subtotal * found.discount;
         msg.style.color = "#2ecc71";
         msg.innerText = `¡Cupón aplicado! ${found.discount * 100}% OFF`;
@@ -591,7 +661,7 @@ function applyCoupon() {
         msg.style.color = "#e74c3c";
         msg.innerText = "Cupón inválido";
     }
-    updateCheckoutRules(); 
+    updateCheckoutRules(); // Usar la función maestra
 }
 
 function closeCheckoutModal() { document.getElementById('checkout-overlay').classList.remove('active'); toggleCart(true); }
@@ -605,6 +675,7 @@ function sendToWhatsApp() {
     let deliveryText = "Retiro por Local";
     let addressText = "";
 
+    // Si es envío, capturamos la dirección
     if (deliveryVal === 'envio') {
         const addressInput = document.getElementById('client-address').value;
         deliveryText = "Envío a Domicilio";
@@ -613,28 +684,79 @@ function sendToWhatsApp() {
 
     const paymentVal = document.querySelector('input[name="payment"]:checked').value;
     const paymentText = paymentVal === "cash" ? "Efectivo" : "Transferencia / MP";
+    
+    // Obtener el total final calculado
     const finalTotal = document.getElementById('modal-total-price').innerText;
 
     let msg = `Hola! 👋 Soy *${name}*.\nQuiero confirmar mi pedido:\n\n`;
-    cart.forEach(i => { msg += `▪️ ${i.qty}x ${i.name}\n`; });
+    
+    cart.forEach(i => { 
+        msg += `▪️ ${i.qty}x ${i.name}\n`; 
+    });
+    
     msg += `\n📞 *Teléfono:* ${phone}`;
     msg += `\n📦 *Entrega:* ${deliveryText}`;
-    if (addressText) msg += addressText; 
+    if (addressText) msg += addressText; // Solo agregamos dirección si corresponde
     msg += `\n💳 *Pago:* ${paymentText}`;
     msg += `\n📝 *Notas:* ${notes}`;
     msg += `\n\n💰 *TOTAL FINAL: ${finalTotal}*`;
     
+    // Limpiar número
     const WHATSAPP_CLEAN = NUMERO_WHATSAPP.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${WHATSAPP_CLEAN}?text=${encodeURIComponent(msg)}`, '_blank');
     
+    // Confeti y cierre
     confettiExplosion();
     closeCheckoutModal();
     showToast("¡Pedido generado! Serás redirigido a WhatsApp.", "success");
 }
 
 // =========================================
-// 10. EXTRAS (CHAT, HISTORIAL, CONFETI, TITULO DINAMICO)
+// 10. EXTRAS Y RETENCIÓN
 // =========================================
+
+// PACK DE RETENCIÓN (RECUPERADO)
+function setupRetentionTools() {
+    // 1. Título Dinámico
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (cart.length > 0) {
+                document.title = `(${cart.reduce((a,b)=>a+b.qty,0)}) 🛒 ¡No olvides tu compra!`;
+            } else {
+                document.title = "💔 ¡Te extrañamos!";
+            }
+        } else {
+            document.title = "El Solar by Romina | Tienda Artesanal";
+        }
+    });
+
+    // 2. Exit Intent (Solo en escritorio)
+    if (window.innerWidth > 768) {
+        document.addEventListener('mouseleave', (e) => {
+            if (e.clientY < 0 && cart.length > 0 && !sessionStorage.getItem('exitIntentShown')) {
+                const promoOverlay = document.getElementById('promo-overlay');
+                if(promoOverlay) {
+                    promoOverlay.innerHTML = `
+                    <div class="promo-modal" style="animation: popIn 0.4s;">
+                        <button class="promo-close" onclick="closePromo()">×</button>
+                        <div class="promo-img" style="background:#ff7675; display:flex; align-items:center; justify-content:center;">
+                            <i class="ph ph-shopping-cart" style="font-size:5rem; color:white;"></i>
+                        </div>
+                        <div class="promo-content">
+                            <h3>¡Espera!</h3>
+                            <p>Tienes productos increíbles en tu carrito.</p>
+                            <p style="font-size:0.9rem;">¿Quieres completar tu compra ahora?</p>
+                            <button class="hero-btn" onclick="closePromo(); toggleCart(true);">Ver Carrito</button>
+                        </div>
+                    </div>`;
+                    promoOverlay.classList.add('active');
+                    sessionStorage.setItem('exitIntentShown', 'true'); 
+                }
+            }
+        });
+    }
+}
+
 function addToHistory(id) {
     id = String(id);
     let history = JSON.parse(localStorage.getItem('history')) || [];
@@ -683,7 +805,7 @@ function getBotResponse(text) {
     if (botKnowledge.gracias.some(k => clean.includes(k))) return "¡De nada! Quedo a tu disposición.";
     return "Soy una IA entrenada solo para responder sobre la tienda (Envíos, Pagos, Productos). 🤖";
 }
-const fakeSales = [ {name:"María", loc:"Morón"}, {name:"Lucía", loc:"Haedo"}, {name:"Sofía", loc:"Ramos"}, {name:"Carla", loc:"Castelar"} ];
+const fakeSales = [ {name:"María", loc:"Morón", prod:"Gorro Lana"}, {name:"Lucía", loc:"Haedo", prod:"Cesta"}, {name:"Sofía", loc:"Ramos", prod:"Collar"}, {name:"Carla", loc:"Castelar", prod:"Mandala"} ];
 function showSalesNotification() {
     const notif = document.getElementById('sales-notification');
     if(!notif || allProducts.length === 0) return;
@@ -734,7 +856,7 @@ function showToast(msg, type="success") {
     setTimeout(() => { toast.style.animation = 'toastOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
-// CONFETI
+// --- CONFETI ---
 function confettiExplosion() {
     for (let i = 0; i < 50; i++) {
         const confetti = document.createElement('div');
@@ -753,19 +875,6 @@ function confettiExplosion() {
         setTimeout(() => confetti.remove(), duration * 1000);
     }
 }
-
-// 11. TÍTULO DINÁMICO (NUEVO)
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-        if (cart.length > 0) {
-            document.title = `(${cart.reduce((a,b)=>a+b.qty,0)}) 🛒 ¡Vuelve! Tu carrito te espera`;
-        } else {
-            document.title = "💔 ¡Te extrañamos! | El Solar";
-        }
-    } else {
-        document.title = "El Solar by Romina | Tienda Artesanal";
-    }
-});
 
 // INICIALIZACIÓN FINAL
 initStore();
