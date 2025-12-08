@@ -1,0 +1,148 @@
+/* css/catalogo.css */
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #525659;
+    margin: 0;
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 280px;
+    background: #fff;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; font-weight: bold; margin-bottom: 30px; }
+.brand img { height: 40px; }
+
+.filter-group { margin-bottom: 25px; }
+.filter-group h3 { font-size: 0.9rem; text-transform: uppercase; color: #6c5ce7; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+.check-row, .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; font-size: 0.9rem; color: #2d3436; }
+.check-row:hover { color: #6c5ce7; }
+
+.btn-print-big {
+    width: 100%;
+    padding: 15px;
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+    margin-bottom: 20px;
+}
+.btn-print-big:hover { background: #5649c0; }
+
+.back-link { text-decoration: none; color: #636e72; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+
+/* HOJA A4 */
+.print-sheet {
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 40px auto;
+    margin-left: 320px;
+    padding: 15mm; /* Margen interno para que no se corte al imprimir */
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+/* CATÁLOGO */
+.catalog-header { display: flex; justify-content: space-between; border-bottom: 3px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+.header-left h1 { margin: 0; font-size: 24px; color: #333; }
+.header-right { text-align: right; font-size: 12px; color: #666; }
+
+/* AGRUPADORES */
+.category-block { 
+    margin-bottom: 30px; 
+    /* Truco para que la categoría no se rompa entre dos hojas si es posible */
+    page-break-inside: auto; 
+}
+
+.cat-title {
+    background: #f1f2f6;
+    padding: 8px 15px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    border-left: 5px solid #6c5ce7;
+    margin-bottom: 10px;
+    /* Forzar que el título siempre esté pegado a su primer producto */
+    page-break-after: avoid; 
+}
+
+.sub-title {
+    font-size: 14px;
+    color: #666;
+    margin: 15px 0 5px 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ccc;
+    display: inline-block;
+    page-break-after: avoid;
+}
+
+/* ITEMS */
+.product-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px dashed #eee;
+    page-break-inside: avoid; /* Un producto nunca se corta al medio */
+}
+
+.p-thumb {
+    width: 35px; /* Miniatura pequeña */
+    height: 35px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+    border: 1px solid #eee;
+}
+
+.p-name { flex: 1; font-size: 13px; font-weight: 500; color: #333; }
+.p-price { font-weight: 700; font-size: 13px; color: #333; min-width: 70px; text-align: right; }
+
+.catalog-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 10px;
+    color: #999;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+/* MODO IMPRESIÓN REAL */
+@media print {
+    body { background: white; display: block; }
+    .sidebar { display: none !important; } /* Ocultar filtros */
+    .print-sheet {
+        margin: 0;
+        width: 100%;
+        box-shadow: none;
+        padding: 0;
+    }
+    @page { 
+        margin: 1cm; 
+        size: A4 portrait; 
+    }
+    
+    /* Si quieres que cada categoría empiece en hoja nueva, descomenta esto: */
+    /* .category-block { page-break-before: always; } */
+}

@@ -1000,3 +1000,109 @@ body.dark-mode .top-bar {
     text-decoration: underline;
     color: #a29bfe !important; /* Un tono más brillante al pasar el mouse */
 }
+
+/* ESTILOS DEL CHATBOT MEJORADO */
+.chat-suggestions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding: 0 5px;
+}
+.suggestion-chip {
+    background: #f1f2f6;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #2d3436;
+}
+.suggestion-chip:hover {
+    background: #6c5ce7;
+    color: white;
+    border-color: #6c5ce7;
+}
+.mini-btn {
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 2px;
+}
+.mini-btn:hover { background: #5649c0; }
+
+/* BOTONES PRO DEL CHAT */
+.btn-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+.mini-btn-add {
+    background: #27ae60; /* Verde venta */
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    flex: 1;
+}
+.mini-btn-add:hover { background: #2ecc71; }
+
+/* BOTONES PRO DEL CHAT */
+.btn-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+.mini-btn-add {
+    background: #27ae60; /* Verde venta */
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    flex: 1;
+}
+.mini-btn-add:hover { background: #2ecc71; }
+
+/* CHIPS DE SUGERENCIAS */
+.chat-suggestions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding: 0 5px;
+}
+.suggestion-chip {
+    background: #f1f2f6;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #2d3436;
+}
+.suggestion-chip:hover {
+    background: #6c5ce7;
+    color: white;
+    border-color: #6c5ce7;
+}
+.mini-btn {
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 2px;
+}
+.mini-btn:hover { background: #5649c0; }

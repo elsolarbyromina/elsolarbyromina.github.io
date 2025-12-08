@@ -4,7 +4,7 @@
 import { db } from './config.js';
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// EXPOSICIÓN DE FUNCIONES AL HTML
+//EXPOSICIÓN DE FUNCIONES AL HTML
 window.toggleCart = toggleCart;
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
@@ -27,9 +27,9 @@ window.closeSalesNotification = closeSalesNotification;
 window.closePromo = closePromo;
 window.submitReview = submitReview;
 window.switchTab = switchTab;
-window.toggleChatWidget = toggleChatWidget;
-window.handleChat = handleChat;
-window.sendMessage = sendMessage;
+//window.toggleChatWidget = toggleChatWidget;
+//window.handleChat = handleChat;
+//window.sendMessage = sendMessage;
 window.startVoiceSearch = startVoiceSearch;
 window.goToSlide = goToSlide;
 window.updateCheckoutRules = updateCheckoutRules;
@@ -784,7 +784,7 @@ function renderHistory() {
         }
     });
 }
-const botKnowledge = { saludo: ["hola", "buenos", "hi", "que tal"], precio: ["precio", "cuanto", "valor", "sale"], envio: ["envio", "entrega", "llevan", "haedo", "zona oeste", "retiro"], pago: ["pago", "tarjeta", "efectivo", "transferencia", "cuotas"], contacto: ["whatsapp", "telefono", "celular", "mail"], gracias: ["gracias", "ok", "listo", "chau"] };
+/*const botKnowledge = { saludo: ["hola", "buenos", "hi", "que tal"], precio: ["precio", "cuanto", "valor", "sale"], envio: ["envio", "entrega", "llevan", "haedo", "zona oeste", "retiro"], pago: ["pago", "tarjeta", "efectivo", "transferencia", "cuotas"], contacto: ["whatsapp", "telefono", "celular", "mail"], gracias: ["gracias", "ok", "listo", "chau"] };
 function toggleChatWidget() { document.getElementById('chat-window').classList.toggle('active'); }
 function handleChat(e) { if (e.key === 'Enter') sendMessage(); }
 function sendMessage() {
@@ -804,8 +804,14 @@ function getBotResponse(text) {
     if (botKnowledge.pago.some(k => clean.includes(k))) return "Por el momento solo Efectivo o Transferencia Bancaria.";
     if (botKnowledge.gracias.some(k => clean.includes(k))) return "¡De nada! Quedo a tu disposición.";
     return "Soy una IA entrenada solo para responder sobre la tienda (Envíos, Pagos, Productos). 🤖";
-}
-const fakeSales = [ {name:"María", loc:"Morón", prod:"Gorro Lana"}, {name:"Lucía", loc:"Haedo", prod:"Cesta"}, {name:"Sofía", loc:"Ramos", prod:"Collar"}, {name:"Carla", loc:"Castelar", prod:"Mandala"} ];
+}*/
+// --- DATOS QUE FALTABAN ---
+const fakeSales = [ 
+    {name:"María", loc:"Morón"}, 
+    {name:"Lucía", loc:"Haedo"}, 
+    {name:"Sofía", loc:"Ramos"}, 
+    {name:"Carla", loc:"Castelar"} 
+];
 function showSalesNotification() {
     const notif = document.getElementById('sales-notification');
     if(!notif || allProducts.length === 0) return;

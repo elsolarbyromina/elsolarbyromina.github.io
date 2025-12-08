@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo por Lista | El Solar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/catalogo.css">
+</head>
+<body>
+
+    <div class="sidebar no-print">
+        <div class="brand">
+            <img src="logo/logo romina.png" alt="Logo">
+            <span>Configuración</span>
+        </div>
+
+        <div class="filter-group">
+            <h3>🖨️ ¿Qué quieres imprimir?</h3>
+            <div id="category-filters">
+                <p>Cargando categorías...</p>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <h3>🎨 Opciones Visuales</h3>
+            <label class="toggle-row">
+                <input type="checkbox" id="show-images" checked onchange="renderCatalog()">
+                <span>Mostrar Miniaturas</span>
+            </label>
+            <label class="toggle-row">
+                <input type="checkbox" id="show-date" checked onchange="toggleDate()">
+                <span>Mostrar Fecha</span>
+            </label>
+        </div>
+
+        <button onclick="window.print()" class="btn-print-big">
+            <i class="ph ph-printer"></i> GENERAR PDF
+        </button>
+        
+        <a href="admin.html" class="back-link"><i class="ph ph-arrow-left"></i> Volver al Admin</a>
+    </div>
+
+    <div class="print-sheet">
+        
+        <header class="catalog-header">
+            <div class="header-left">
+                <h1>Catálogo de Productos</h1>
+                <p>El Solar by Romina</p>
+            </div>
+            <div class="header-right">
+                <p>+54 9 11 6872 2917</p>
+                <p>elsolarbyromina.com</p>
+            </div>
+        </header>
+
+        <div id="catalog-content"></div>
+
+        <footer class="catalog-footer" id="footer-date-box">
+            Generado el <span id="today-date"></span>
+        </footer>
+
+    </div>
+
+    <script type="module" src="js/catalogo.js"></script>
+</body>
+</html>

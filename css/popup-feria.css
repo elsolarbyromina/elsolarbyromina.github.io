@@ -1,0 +1,106 @@
+/* css/popup-feria.css */
+
+.feria-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+.feria-card {
+    position: relative;
+    width: 90%;
+    /* IMAGEN MÁS CHICA: Reducimos el ancho máximo de 500px a 400px */
+    max-width: 400px; 
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    transform: scale(0.8);
+    animation: popUp 0.4s 0.2s forwards;
+    cursor: pointer;
+}
+
+.feria-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+}
+.feria-close:hover { background: #e74c3c; }
+
+.feria-img-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    line-height: 0;
+}
+
+.feria-img-box img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* EL VELO (Ahora cubre TODA la imagen) */
+.feria-text-veil {
+    position: absolute;
+    top: 0;      /* Empieza arriba */
+    left: 0;
+    width: 100%;
+    height: 100%; /* Cubre todo el alto */
+    
+    background: rgba(108, 92, 231, 0.95); /* Un poco más sólido para leer bien */
+    color: white;
+    
+    /* Centramos el texto perfectamente */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    padding: 30px;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    
+    /* Animación */
+    opacity: 1;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* EFECTO: Al pasar el mouse, desaparece el velo y se ve la foto */
+.feria-card:hover .feria-text-veil {
+    opacity: 0;
+    transform: scale(1.1); /* Efecto de zoom leve al desaparecer */
+    pointer-events: none;
+}
+
+.feria-text-veil p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes popUp { to { transform: scale(1); } }
