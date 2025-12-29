@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Muro Clientes</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="padding: 20px; max-width: 600px; margin: 0 auto;">
+
+    <h1>📸 Muro de la Fama</h1>
+    <p>Sube fotos de clientes felices para generar confianza.</p>
+
+    <div class="admin-card">
+        
+        <div class="form-group">
+            <label>1. Foto del Cliente</label>
+            <input type="file" id="rw-file" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label>2. Nombre del Cliente</label>
+            <input type="text" id="rw-client" placeholder="Ej: María de Haedo">
+        </div>
+
+        <div class="form-group">
+            <label>3. Testimonio / Comentario</label>
+            <textarea id="rw-quote" rows="3" placeholder="Ej: Me encantó, llegó súper rápido..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>4. Producto Relacionado (Opcional)</label>
+            <select id="rw-product-select" style="width:100%; padding:10px;">
+                <option value="">-- Ninguno --</option>
+            </select>
+        </div>
+
+        <button onclick="uploadReview()" class="submit-btn">Publicar en el Muro</button>
+        <p id="status"></p>
+    </div>
+
+    <h3>Publicaciones Activas</h3>
+    <div id="rw-list"></div>
+
+    <script type="module">
+        import { db, storage } from './js/config.js';
+        import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        let products = [];
+
+        async function init() {
+            // Cargar productos al select
+            const pSnap = await getDocs(collection(db, "products"));
+            const select = document.getElementById('rw-product-select');
+            pSnap.forEach(d => {
+                const p = d.data();
+                products.push({ id: d.id, ...p });
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.text = p.name;
+                select.appendChild(opt);
+            });
+            loadReviews();
+        }
+
+        async function loadReviews() {
+            const list = document.getElementById('rw-list');
+            list.innerHTML = 'Cargando...';
+            const q = query(collection(db, "reviews_wall"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            list.innerHTML = '';
+            
+            snap.forEach(d => {
+                const data = d.data();
+                list.innerHTML += `
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:#fff; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <img src="${data.image}" width="50" height="50" style="object-fit:cover; border-radius:4px;">
+                        <div>
+                            <strong>${data.clientName}</strong><br>
+                            <small>"${data.quote.substring(0,30)}..."</small>
+                        </div>
+                        <button onclick="del('${d.id}')" style="margin-left:auto; color:red; border:none; background:none; cursor:pointer;">Borrar</button>
+                    </div>`;
+            });
+        }
+
+        window.uploadReview = async () => {
+            const file = document.getElementById('rw-file').files[0];
+            const client = document.getElementById('rw-client').value;
+            const quote = document.getElementById('rw-quote').value;
+            const prodId = document.getElementById('rw-product-select').value;
+            const status = document.getElementById('status');
+
+            if(!file || !client || !quote) return alert("Faltan datos");
+
+            status.innerText = "Subiendo...";
+
+            // Subir Foto
+            const sRef = ref(storage, `reviews/${Date.now()}`);
+            await uploadBytes(sRef, file);
+            const url = await getDownloadURL(sRef);
+
+            // Datos del producto (si eligió uno)
+            let prodData = {};
+            if(prodId) {
+                const p = products.find(x => String(x.id) === String(prodId));
+                if(p) {
+                    prodData = {
+                        productId: p.id,
+                        productName: p.name,
+                        productImg: p.img
+                    };
+                }
+            }
+
+            // Guardar
+            await addDoc(collection(db, "reviews_wall"), {
+                image: url,
+                clientName: client,
+                quote: quote,
+                timestamp: Date.now(),
+                ...prodData
+            });
+
+            status.innerText = "✅ Listo!";
+            document.getElementById('rw-client').value = '';
+            document.getElementById('rw-quote').value = '';
+            loadReviews();
+        };
+
+        window.del = async (id) => {
+            if(confirm("Borrar?")) {
+                await deleteDoc(doc(db, "reviews_wall", id));
+                loadReviews();
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>

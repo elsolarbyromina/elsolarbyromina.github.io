@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Video Compras</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="padding: 20px; max-width: 600px; margin: 0 auto;">
+
+    <h1>📹 Video Shopping</h1>
+    <p>Sube un video corto (Vertical 9:16) para destacar un producto.</p>
+
+    <div class="admin-card">
+        
+        <div class="form-group">
+            <label>1. Selecciona el Producto a Vender</label>
+            <select id="product-select" style="width:100%; padding:10px; margin-bottom:15px;">
+                <option>Cargando productos...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>2. Sube el Video (MP4)</label>
+            <input type="file" id="video-file" accept="video/mp4" style="margin-bottom:15px;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+            <input type="checkbox" id="video-active" checked style="width:20px; height:20px;">
+            <label for="video-active">Mostrar en la web</label>
+        </div>
+
+        <button onclick="saveVideoWidget()" class="submit-btn">💾 Publicar Video</button>
+        <p id="status" style="margin-top:10px; color:#666; font-weight:bold;"></p>
+
+    </div>
+
+    <script type="module">
+        import { db, storage } from './js/config.js';
+        import { doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        let products = [];
+
+        // Cargar productos al select
+        async function loadProducts() {
+            const select = document.getElementById('product-select');
+            select.innerHTML = '';
+            
+            const snap = await getDocs(collection(db, "products"));
+            snap.forEach(d => {
+                const p = d.data();
+                products.push({ id: d.id, ...p }); // Guardamos todo para usarlo luego
+                const opt = document.createElement('option');
+                opt.value = d.id; // Usamos el ID del doc
+                opt.text = `${p.name} - $${p.price}`;
+                select.appendChild(opt);
+            });
+        }
+
+        window.saveVideoWidget = async () => {
+            const file = document.getElementById('video-file').files[0];
+            const prodId = document.getElementById('product-select').value;
+            const isActive = document.getElementById('video-active').checked;
+            const status = document.getElementById('status');
+
+            // Encontrar datos del producto elegido
+            const selectedProd = products.find(p => String(p.id) === String(prodId));
+            
+            if(!selectedProd) return alert("Error con el producto seleccionado");
+
+            status.innerText = "Procesando...";
+
+            let videoUrl = null;
+
+            // Si sube video nuevo, lo procesamos
+            if(file) {
+                status.innerText = "Subiendo video (esto puede tardar)... ⏳";
+                const sRef = ref(storage, `videos/shopping_widget`);
+                await uploadBytes(sRef, file);
+                videoUrl = await getDownloadURL(sRef);
+            }
+
+            // Guardar config
+            const dataToSave = {
+                active: isActive,
+                productId: selectedProd.id,
+                productName: selectedProd.name,
+                productPrice: selectedProd.price,
+                productImg: selectedProd.img, // Usamos la foto del producto para el overlay
+                timestamp: Date.now()
+            };
+
+            // Solo actualizamos URL si hubo subida nueva, si no mantenemos la vieja (merge)
+            if(videoUrl) dataToSave.videoUrl = videoUrl;
+
+            await setDoc(doc(db, "settings", "video_widget"), dataToSave, { merge: true });
+
+            status.innerText = "✅ ¡Video Publicado!";
+            alert("Video widget actualizado correctamente.");
+        };
+
+        loadProducts();
+    </script>
+</body>
+</html>

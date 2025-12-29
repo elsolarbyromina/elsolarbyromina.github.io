@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Blog | El Solar</title>
+    <link rel="icon" type="image/png" href="logo/logo romina.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Estilos específicos para el editor de blog */
+        .blog-editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .preview-card { transform: scale(0.9); transform-origin: top left; pointer-events: none; }
+        @media(max-width: 768px) { .blog-editor-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <form class="login-box" onsubmit="event.preventDefault(); loginBlog();">
+            <h2>Admin Blog</h2>
+            <p style="color:#666; margin-bottom:1rem;">Acceso exclusivo para redactores</p>
+            <input type="email" id="admin-email" placeholder="Email" autocomplete="username" style="margin-bottom:10px; width:100%; padding:10px;">
+            <input type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password" style="margin-bottom:10px; width:100%; padding:10px;">
+            <button type="submit" class="submit-btn">Entrar</button>
+            <a href="index.html" style="display:block; margin-top:10px; font-size:0.8rem; color:#666;">Volver a la Tienda</a>
+        </form>
+    </div>
+
+    <div class="admin-container" id="admin-content" style="display:none;">
+        
+        <div class="admin-header">
+            <h1>📰 Editor de Novedades</h1>
+            <div style="display:flex; gap:10px;">
+                <a href="novedades.html" target="_blank" class="hero-btn" style="padding: 8px 15px; font-size:0.8rem;">Ver Blog en Vivo</a>
+                <button onclick="logoutBlog()" style="background:#636e72; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;">Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <div class="blog-editor-grid">
+            
+            <div class="admin-card">
+                <h3>📝 Redactar Nueva Nota</h3>
+                <form id="blog-form">
+                    <input type="hidden" id="post-id"> <div class="form-group">
+                        <label>Título</label>
+                        <input type="text" id="post-title" required placeholder="Ej: Nueva Colección de Invierno">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="post-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Imagen Principal</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="post-img-file" accept="image/*" onchange="previewPostImage(this)">
+                            <div class="upload-placeholder">
+                                <i class="ph ph-image"></i>
+                                <span>Click para subir foto</span>
+                            </div>
+                            <img id="post-preview-img" class="img-preview" src="" style="display:none; max-height: 200px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Texto / Noticia</label>
+                        <textarea id="post-text" rows="6" required placeholder="Escribe aquí tu novedad..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Enlace (Opcional)</label>
+                        <input type="text" id="post-link" placeholder="Ej: https://instagram.com/...">
+                        <small style="color:#888;">Si lo dejas vacío, el botón "Leer más" no aparecerá.</small>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button type="submit" class="submit-btn" id="save-post-btn">Publicar Nota</button>
+                        <button type="button" class="submit-btn" onclick="resetForm()" style="background:#b2bec3; display:none;" id="cancel-post-btn">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h3>📚 Notas Publicadas</h3>
+                <div id="posts-list" style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
+                    <p style="color:#999; text-align:center;">Cargando noticias...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="js/admin-blog.js"></script>
+</body>
+</html>

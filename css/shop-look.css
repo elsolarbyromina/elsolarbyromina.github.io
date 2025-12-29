@@ -1,0 +1,129 @@
+/* css/shop-look.css */
+
+/* SECCIÓN INYECTADA */
+#shop-the-look-section {
+    padding: 4rem 20px;
+    background: #fff;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stl-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--text-main, #333);
+}
+
+/* CONTENEDOR DE LA IMAGEN */
+.stl-container {
+    position: relative;
+    width: 100%;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.stl-main-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* PUNTOS INTERACTIVOS (HOTSPOTS) */
+.stl-dot {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+    transform: translate(-50%, -50%); /* Centrar en el punto exacto */
+    transition: transform 0.2s;
+}
+
+/* Círculo pulsante externo */
+.stl-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    animation: pulseDot 2s infinite;
+    z-index: -1;
+}
+
+/* Icono central (+) */
+.stl-dot::before {
+    content: '+';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.stl-dot:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+    background: var(--primary, #6c5ce7);
+    color: white;
+}
+.stl-dot:hover::before { color: white; }
+
+@keyframes pulseDot {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+/* TARJETA DE PRODUCTO (TOOLTIP) */
+.stl-tooltip {
+    position: absolute;
+    bottom: 35px; /* Arriba del punto */
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    width: 180px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: none; /* Oculto por defecto */
+    text-align: center;
+    z-index: 20;
+    animation: fadeInTooltip 0.2s forwards;
+}
+
+/* Triangulito abajo */
+.stl-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 12px; height: 12px;
+    background: white;
+}
+
+.stl-dot:hover .stl-tooltip { display: block; }
+
+.stl-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 5px; }
+.stl-name { font-size: 0.85rem; font-weight: bold; margin-bottom: 3px; color: #333; }
+.stl-price { font-size: 0.9rem; color: var(--primary, #6c5ce7); font-weight: 700; }
+.stl-btn {
+    margin-top: 5px;
+    background: #333; color: white; border: none;
+    width: 100%; padding: 5px; border-radius: 4px;
+    cursor: pointer; font-size: 0.8rem;
+}
+.stl-btn:hover { background: var(--primary, #6c5ce7); }
+
+@keyframes fadeInTooltip { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* Responsive: En móvil, los puntos son más grandes */
+@media (max-width: 600px) {
+    .stl-dot { width: 30px; height: 30px; }
+    .stl-tooltip { width: 140px; bottom: 40px; }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Decorador</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="padding: 20px; max-width: 500px; margin: 0 auto;">
+
+    <h1>🎨 Fondos para Decorador</h1>
+    <p>Sube texturas o fotos de ambientes vacíos.</p>
+
+    <div class="admin-card">
+        <input type="file" id="bg-file" accept="image/*" style="margin-bottom:10px;">
+        <input type="text" id="bg-name" placeholder="Nombre (Ej: Mesa Roble)" style="width:100%; padding:10px; margin-bottom:10px;">
+        <button onclick="uploadBg()" class="submit-btn">Subir Fondo</button>
+        <p id="status"></p>
+    </div>
+
+    <h3>Fondos Activos</h3>
+    <div id="bg-list"></div>
+
+    <script type="module">
+        import { db, storage } from './js/config.js';
+        import { collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        async function load() {
+            const list = document.getElementById('bg-list');
+            list.innerHTML = '';
+            const snap = await getDocs(collection(db, "backgrounds"));
+            snap.forEach(d => {
+                const b = d.data();
+                list.innerHTML += `
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:#eee; padding:5px; border-radius:5px;">
+                        <img src="${b.img}" width="40" height="40" style="object-fit:cover;">
+                        <span>${b.name}</span>
+                        <button onclick="del('${d.id}')" style="margin-left:auto; color:red; border:none;">X</button>
+                    </div>`;
+            });
+        }
+
+        window.uploadBg = async () => {
+            const file = document.getElementById('bg-file').files[0];
+            const name = document.getElementById('bg-name').value;
+            if(!file || !name) return alert("Completa todo");
+
+            document.getElementById('status').innerText = "Subiendo...";
+            const sRef = ref(storage, `backgrounds/${Date.now()}`);
+            await uploadBytes(sRef, file);
+            const url = await getDownloadURL(sRef);
+
+            await addDoc(collection(db, "backgrounds"), { name, img: url });
+            document.getElementById('status').innerText = "Listo";
+            load();
+        };
+
+        window.del = async (id) => {
+            if(confirm("Borrar?")) {
+                await deleteDoc(doc(db, "backgrounds", id));
+                load();
+            }
+        };
+
+        load();
+    </script>
+</body>
+</html>

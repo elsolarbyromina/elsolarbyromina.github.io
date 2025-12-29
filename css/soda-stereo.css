@@ -1,0 +1,79 @@
+/* css/soda-stereo.css */
+
+.soda-bubble {
+    position: fixed;
+    bottom: -150px;
+    width: 90px;
+    height: 90px;
+    z-index: 9998;
+    cursor: pointer;
+    
+    /* Diseño de Burbuja */
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1) 60%, rgba(108, 92, 231, 0.1) 100%);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    
+    /* Centrar el logo adentro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Animación: Subir + Bamboleo */
+    animation: 
+        riseUp 10s linear forwards,
+        wobble 3s ease-in-out infinite alternate;
+        
+    pointer-events: auto;
+    transition: transform 0.2s;
+}
+
+.soda-bubble img {
+    width: 70%; /* El logo ocupa el 70% de la burbuja */
+    height: auto;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.2));
+}
+
+/* 1. Subir */
+@keyframes riseUp {
+    0%   { bottom: -150px; opacity: 0; }
+    10%  { opacity: 1; }
+    100% { bottom: 120vh; opacity: 0; }
+}
+
+/* 2. Bamboleo (Movimiento líquido) */
+@keyframes wobble {
+    0%   { transform: translateX(-15px) rotate(-5deg); }
+    100% { transform: translateX(15px) rotate(5deg); }
+}
+
+/* Efecto al explotar (Click) */
+.soda-bubble.pop {
+    transform: scale(1.4);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+}
+
+/* Texto GRACIAS TOTALES */
+.cerati-text {
+    position: fixed;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px #0984e3, 0 0 20px #0984e3; /* Azul eléctrico Soda */
+    z-index: 9999;
+    pointer-events: none;
+    animation: textFadeUp 1.5s forwards;
+    white-space: nowrap;
+}
+
+@keyframes textFadeUp {
+    0% { transform: translateY(0) scale(0.8); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1); opacity: 0; }
+}

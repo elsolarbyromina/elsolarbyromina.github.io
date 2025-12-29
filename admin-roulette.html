@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Ruleta</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body style="padding: 20px; max-width: 600px; margin: 0 auto;">
+
+    <h1>🎡 Configurar Ruleta</h1>
+    <p>Define los 6 premios que verán los clientes.</p>
+
+    <div class="admin-card">
+        <div id="slices-container">
+            </div>
+        <button onclick="saveRoulette()" class="submit-btn" style="margin-top:20px;">💾 Guardar Cambios</button>
+    </div>
+
+    <script type="module">
+        import { db } from './js/config.js';
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Colores predefinidos para que quede lindo
+        const defaultColors = ["#ff7675", "#74b9ff", "#a29bfe", "#fdcb6e", "#00b894", "#636e72"];
+
+        async function load() {
+            const container = document.getElementById('slices-container');
+            let items = [];
+
+            // Cargar de DB o usar default
+            try {
+                const snap = await getDoc(doc(db, "settings", "roulette"));
+                if(snap.exists()) items = snap.data().items;
+            } catch(e) { console.log("Sin config previa"); }
+
+            // Si no hay datos, rellenar 6 vacíos
+            if(items.length === 0) {
+                for(let i=0; i<6; i++) items.push({text:"", code:"", color: defaultColors[i]});
+            }
+
+            // Generar HTML
+            container.innerHTML = items.map((item, i) => `
+                <div style="margin-bottom:15px; border:1px solid #ddd; padding:10px; border-radius:10px; background: ${item.color}22;">
+                    <strong>Opción #${i+1}</strong>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <input type="text" placeholder="Texto Visible (Ej: 10% OFF)" id="text-${i}" value="${item.text}" style="flex:1; padding:8px;">
+                        <input type="text" placeholder="Código Cupón (Opcional)" id="code-${i}" value="${item.code || ''}" style="flex:1; padding:8px;">
+                        <input type="color" id="color-${i}" value="${item.color}" style="width:50px;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.saveRoulette = async () => {
+            const newItems = [];
+            for(let i=0; i<6; i++) {
+                newItems.push({
+                    text: document.getElementById(`text-${i}`).value,
+                    code: document.getElementById(`code-${i}`).value,
+                    color: document.getElementById(`color-${i}`).value
+                });
+            }
+            
+            await setDoc(doc(db, "settings", "roulette"), { items: newItems });
+            alert("✅ Ruleta actualizada!");
+        };
+
+        load();
+    </script>
+</body>
+</html>

@@ -3,19 +3,18 @@
 document.addEventListener("DOMContentLoaded", function() {
     
     // 1. Configuración
-    const IMAGEN_URL = "img/popup.jpg"; 
+    const IMAGEN_URL = "logo/caratula_28-12.jpg"; 
     const TIEMPO_AUTOCIERRE = 15000; // 15000 milisegundos = 10 segundos
 
     // 2. Texto del anuncio
     const TEXTO_ANUNCIO = `
-        Este domingo 14 de diciembre estaremos presentes en la Feria: 
-        <strong>"Hay Más Feria"</strong> en San Telmo.<br><br>
-        Compartiendo toda la magia artesanal de El Solar by Romina.<br>
-        ¡Los esperamos para disfrutar de piezas únicas!<br><br>
-        Y si no podés venir, te esperamos con los brazos abiertos en<br>
-        nuestras redes y en nuestra tienda online para que sigas<br>
-        descubriendo nuestras creaciones.<br><br>
+        Este domingo 28 de diciembre te esperamos en la feria: <strong>"Hay Más Feria", en San Telmo </strong>💨<br>
+    <strong>No te la pierdas, puesto 24 "El Solar by Romina".</strong><br><br>
+        Gracias por acompañarnos siempre 🤍<br>
+        Y mientras tanto, te esperamos <strong>en</strong> nuestras redes y en la tienda online con piezas únicas hechas con amor 💛<br><br>
+        Nos vemos pronto<br>
         💕🧶✨
+
         
     `;
 

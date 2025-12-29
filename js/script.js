@@ -672,7 +672,7 @@ function sendToWhatsApp() {
     const notes = document.getElementById('client-notes').value || "Ninguna";
     
     const deliveryVal = document.querySelector('input[name="delivery"]:checked').value;
-    let deliveryText = "Retiro por Local";
+    let deliveryText = "Retiro a convenir con el vendedor";
     let addressText = "";
 
     // Si es envío, capturamos la dirección

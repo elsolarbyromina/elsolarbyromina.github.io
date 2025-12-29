@@ -1,0 +1,59 @@
+/* css/st-cassette.css */
+
+.vecna-tape {
+    position: fixed;
+    width: 90px;
+    height: auto;
+    z-index: 9998;
+    cursor: pointer;
+    
+    /* Sombra roja siniestra (Stranger Things Vibe) */
+    filter: drop-shadow(0 0 15px rgba(179, 0, 0, 0.8));
+    
+    /* Animación: Viaje (Coordenadas) + Rotación (Giro) */
+    animation: 
+        travelAcross 15s linear forwards,
+        tranceRotate 6s ease-in-out infinite alternate;
+        
+    pointer-events: auto;
+    transition: transform 0.3s, filter 0.3s;
+}
+
+/* Animación de Viaje usando variables calculadas en JS */
+/* sx/sy = Start X/Y | ex/ey = End X/Y */
+@keyframes travelAcross {
+    0%   { left: var(--sx); top: var(--sy); }
+    100% { left: var(--ex); top: var(--ey); }
+}
+
+/* Rotación mística (El cassette gira suavemente mientras flota) */
+@keyframes tranceRotate {
+    0%   { transform: rotate(-15deg) scale(1); }
+    100% { transform: rotate(15deg) scale(1.1); }
+}
+
+/* EFECTO SALVACIÓN (Click) */
+.vecna-tape.saved {
+    animation-play-state: paused; /* Se congela en el aire */
+    filter: drop-shadow(0 0 30px #6c5ce7); /* Luz violeta salvadora */
+    transform: scale(1.5); /* Crece */
+    opacity: 0;
+    transition: all 0.6s ease-out;
+}
+
+/* Notas musicales */
+.music-note {
+    position: fixed;
+    color: #6c5ce7;
+    font-size: 2.5rem;
+    font-weight: bold;
+    z-index: 9999;
+    pointer-events: none;
+    text-shadow: 0 0 5px white;
+    animation: floatNote 1.5s forwards;
+}
+
+@keyframes floatNote {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-100px) rotate(20deg); opacity: 0; }
+}

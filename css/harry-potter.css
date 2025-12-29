@@ -1,0 +1,62 @@
+/* css/harry-potter.css */
+
+.hp-snitch {
+    position: fixed;
+    bottom: -100px; /* Empieza escondida */
+    width: 60px;    /* Es pequeñita */
+    height: auto;
+    z-index: 9998;
+    cursor: crosshair; /* Cursor de "mira" para atraparla */
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)); /* Brillo dorado intenso */
+    
+    /* Animación TRIPLE: Subir + ZigZag + Aleteo */
+    animation: 
+        flyUp 8s linear forwards, 
+        zigZag 2s ease-in-out infinite alternate,
+        flutter 0.1s linear infinite;
+        
+    pointer-events: auto;
+    transition: transform 0.1s;
+}
+
+/* 1. Sube hasta desaparecer arriba */
+@keyframes flyUp {
+    0%   { bottom: -100px; }
+    100% { bottom: 110vh; }
+}
+
+/* 2. Se mueve de lado a lado (Nerviosa) */
+@keyframes zigZag {
+    0%   { margin-left: -50px; transform: rotate(-15deg); }
+    100% { margin-left: 50px; transform: rotate(15deg); }
+}
+
+/* 3. Vibración de aleteo ultra rápido */
+@keyframes flutter {
+    0%   { opacity: 0.9; }
+    50%  { opacity: 1; scale: 1.05; }
+    100% { opacity: 0.9; }
+}
+
+/* Efecto al atraparla (Click) */
+.hp-snitch.caught {
+    transform: scale(3);
+    opacity: 0;
+    transition: 0.5s ease-out;
+}
+
+/* Texto de puntos (opcional, aparece al clickear) */
+.hp-points {
+    position: fixed;
+    color: #f1c40f;
+    font-weight: bold;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 0px #000;
+    z-index: 9999;
+    pointer-events: none;
+    animation: floatPoints 1s forwards;
+}
+
+@keyframes floatPoints {
+    to { transform: translateY(-50px); opacity: 0; }
+}

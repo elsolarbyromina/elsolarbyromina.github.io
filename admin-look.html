@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Shop the Look</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #img-workspace {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+            max-width: 100%;
+            border: 2px dashed #ccc;
+            cursor: crosshair;
+        }
+        .temp-dot {
+            position: absolute; width: 20px; height: 20px;
+            background: red; border-radius: 50%; transform: translate(-50%, -50%);
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body style="padding: 20px; max-width: 800px; margin: 0 auto;">
+
+    <h1>📸 Shop the Look Admin</h1>
+    <p>1. Sube una foto. <br> 2. Haz click en los productos para etiquetarlos.</p>
+
+    <div class="admin-card">
+        <input type="file" id="look-file" accept="image/*" onchange="previewLook(this)">
+        
+        <div id="workspace-container" style="display:none;">
+            <div id="img-workspace" onclick="addHotspot(event)">
+                <img id="preview-img" style="width:100%; display:block;">
+                </div>
+            <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:5px;">Click en la foto para agregar producto</p>
+        </div>
+
+        <h3 style="margin-top:20px;">Puntos Agregados (<span id="count">0</span>)</h3>
+        <ul id="spots-list" style="margin-bottom:20px;"></ul>
+
+        <div style="display:flex; gap:10px;">
+            <label><input type="checkbox" id="look-active" checked> Activar en la web</label>
+            <button onclick="saveLookbook()" class="submit-btn">💾 Guardar Lookbook</button>
+        </div>
+        <p id="status"></p>
+    </div>
+
+    <dialog id="prod-modal" style="padding:20px; border-radius:10px; border:1px solid #ccc;">
+        <h3>Elige el producto</h3>
+        <select id="modal-select" style="width:100%; padding:10px; margin-bottom:10px;"></select>
+        <div style="display:flex; gap:10px;">
+            <button onclick="confirmSpot()" class="submit-btn">Confirmar</button>
+            <button onclick="document.getElementById('prod-modal').close()" style="padding:10px;">Cancelar</button>
+        </div>
+    </dialog>
+
+    <script type="module">
+        import { db, storage } from './js/config.js';
+        import { collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        let currentFile = null;
+        let hotspots = [];
+        let tempClick = { x: 0, y: 0 };
+        let products = [];
+
+        // Cargar productos al inicio
+        (async () => {
+            const snap = await getDocs(collection(db, "products"));
+            const sel = document.getElementById('modal-select');
+            snap.forEach(d => {
+                const p = d.data();
+                products.push({ id: d.id, ...p });
+                const opt = document.createElement('option');
+                opt.value = p.id; // Usamos el ID interno del producto (ej: 1, 2...)
+                opt.text = p.name;
+                sel.appendChild(opt);
+            });
+        })();
+
+        window.previewLook = (input) => {
+            if(input.files && input.files[0]) {
+                currentFile = input.files[0];
+                const img = document.getElementById('preview-img');
+                img.src = URL.createObjectURL(currentFile);
+                document.getElementById('workspace-container').style.display = 'block';
+            }
+        };
+
+        window.addHotspot = (e) => {
+            // Calcular porcentaje X e Y
+            const rect = e.target.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            tempClick = { x, y };
+            document.getElementById('prod-modal').showModal();
+        };
+
+        window.confirmSpot = () => {
+            const prodId = document.getElementById('modal-select').value;
+            const prod = products.find(p => String(p.id) === String(prodId));
+            
+            if(prod) {
+                hotspots.push({
+                    x: tempClick.x.toFixed(2),
+                    y: tempClick.y.toFixed(2),
+                    productId: prod.id,
+                    productName: prod.name,
+                    productPrice: prod.price,
+                    productImg: prod.img
+                });
+                renderSpots();
+            }
+            document.getElementById('prod-modal').close();
+        };
+
+        function renderSpots() {
+            const list = document.getElementById('spots-list');
+            const ws = document.getElementById('img-workspace');
+            
+            // Limpiar puntos visuales previos (excepto la imagen base)
+            const oldDots = ws.querySelectorAll('.temp-dot');
+            oldDots.forEach(d => d.remove());
+
+            list.innerHTML = '';
+            document.getElementById('count').innerText = hotspots.length;
+
+            hotspots.forEach((h, i) => {
+                // Dibujar en lista
+                list.innerHTML += `<li>${h.productName} <button onclick="removeSpot(${i})" style="color:red; border:none; background:none; cursor:pointer;">(Borrar)</button></li>`;
+
+                // Dibujar en imagen
+                const dot = document.createElement('div');
+                dot.className = 'temp-dot';
+                dot.style.left = h.x + '%';
+                dot.style.top = h.y + '%';
+                dot.title = h.productName;
+                ws.appendChild(dot);
+            });
+        }
+
+        window.removeSpot = (i) => {
+            hotspots.splice(i, 1);
+            renderSpots();
+        };
+
+        window.saveLookbook = async () => {
+            if(!currentFile) return alert("Sube una foto");
+            if(hotspots.length === 0) return alert("Etiqueta al menos un producto");
+
+            const status = document.getElementById('status');
+            status.innerText = "Subiendo imagen...";
+
+            // Subir Imagen
+            const sRef = ref(storage, `lookbooks/${Date.now()}`);
+            await uploadBytes(sRef, currentFile);
+            const url = await getDownloadURL(sRef);
+
+            // Guardar en Firestore
+            await addDoc(collection(db, "lookbooks"), {
+                image: url,
+                hotspots: hotspots,
+                active: document.getElementById('look-active').checked,
+                timestamp: Date.now()
+            });
+
+            status.innerText = "✅ ¡Lookbook Publicado!";
+            alert("Listo, revisa la web.");
+            location.reload();
+        };
+    </script>
+</body>
+</html>

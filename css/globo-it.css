@@ -1,0 +1,45 @@
+/* css/globo-it.css */
+
+.it-balloon {
+    position: fixed;
+    bottom: -150px; /* Empieza escondido abajo */
+    width: 100px;   /* Tamaño del globo */
+    height: auto;
+    z-index: 9998;  /* Debajo del popup de feria (99999), pero encima de la web */
+    cursor: pointer;
+    filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.5)); /* Sombra realista */
+    
+    /* Animación de flotar hacia arriba */
+    animation: floatUp 15s linear forwards;
+    
+    /* Evita que bloquee clicks si no le atinan */
+    pointer-events: auto;
+}
+
+/* Animación: Sube y se balancea un poco */
+@keyframes floatUp {
+    0% {
+        bottom: -150px;
+        transform: translateX(0) rotate(0deg);
+    }
+    25% {
+        transform: translateX(20px) rotate(5deg);
+    }
+    50% {
+        transform: translateX(-20px) rotate(-5deg);
+    }
+    75% {
+        transform: translateX(10px) rotate(3deg);
+    }
+    100% {
+        bottom: 120vh; /* Termina muy arriba, fuera de pantalla */
+        transform: translateX(0) rotate(0deg);
+    }
+}
+
+/* Efecto al explotar (opcional) */
+.it-balloon.pop {
+    transform: scale(1.5);
+    opacity: 0;
+    transition: 0.2s;
+}

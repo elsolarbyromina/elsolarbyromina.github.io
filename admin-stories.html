@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Historia</title>
+    <link rel="stylesheet" href="css/style.css"> </head>
+<body style="padding: 20px; max-width: 500px; margin: 0 auto;">
+
+    <h2>📸 Subir Story</h2>
+    
+    <div class="admin-card">
+        <input type="file" id="story-file" accept="image/*" style="margin-bottom:15px;">
+        <input type="text" id="story-label" placeholder="Texto corto (Ej: Oferta)" style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="text" id="story-link" placeholder="Link al producto (Opcional)" style="width:100%; padding:10px; margin-bottom:10px;">
+        
+        <button onclick="uploadStory()" class="submit-btn">Publicar Historia (24h)</button>
+        <p id="status" style="margin-top:10px; color:#666;"></p>
+    </div>
+
+    <h3>Historias Activas:</h3>
+    <div id="active-stories"></div>
+
+    <script type="module">
+        import { db, storage } from './js/config.js';
+        import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        // Cargar historias
+        async function loadStories() {
+            const div = document.getElementById('active-stories');
+            div.innerHTML = '';
+            const q = query(collection(db, "stories"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            snap.forEach(d => {
+                const data = d.data();
+                div.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#eee; padding:10px; margin-bottom:5px; border-radius:5px;">
+                        <img src="${data.image}" width="40" height="40" style="border-radius:50%">
+                        <span>${data.label}</span>
+                        <button onclick="del('${d.id}')" style="background:red; color:white; border:none; padding:5px;">X</button>
+                    </div>`;
+            });
+        }
+
+        // Subir
+        window.uploadStory = async () => {
+            const file = document.getElementById('story-file').files[0];
+            const label = document.getElementById('story-label').value;
+            const link = document.getElementById('story-link').value;
+            const status = document.getElementById('status');
+
+            if(!file) return alert("Elige foto");
+            status.innerText = "Subiendo...";
+
+            const sRef = ref(storage, `stories/${Date.now()}`);
+            await uploadBytes(sRef, file);
+            const url = await getDownloadURL(sRef);
+
+            await addDoc(collection(db, "stories"), {
+                image: url, label, link, timestamp: Date.now()
+            });
+
+            status.innerText = "¡Listo!";
+            loadStories();
+        };
+
+        window.del = async (id) => {
+            if(confirm("Borrar?")) {
+                await deleteDoc(doc(db, "stories", id));
+                loadStories();
+            }
+        }
+
+        loadStories();
+    </script>
+</body>
+</html>

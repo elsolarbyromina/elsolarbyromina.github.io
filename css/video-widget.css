@@ -1,0 +1,97 @@
+/* css/video-widget.css */
+
+/* BURBUJA FLOTANTE */
+.video-widget-bubble {
+    position: fixed;
+    bottom: 100px; /* Arriba del Chatbot */
+    right: 20px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid #6c5ce7; /* Color de tu marca */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 2800;
+    transition: transform 0.3s;
+    animation: pulseBorder 2s infinite;
+}
+.video-widget-bubble:hover { transform: scale(1.1); }
+
+/* Video en miniatura (Muted loop) */
+.video-mini-player {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@keyframes pulseBorder {
+    0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(108, 92, 231, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
+}
+
+/* MODAL EXPANDIDO (TIKTOK STYLE) */
+.video-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 99999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+.video-modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+
+.video-player-card {
+    position: relative;
+    width: 100%; max-width: 400px; height: 80vh;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.video-full {
+    width: 100%; height: 100%; object-fit: cover;
+}
+
+/* CAPA DE PRODUCTO (Overlay sobre el video) */
+.product-overlay-card {
+    position: absolute; bottom: 20px; left: 20px; right: 20px;
+    background: rgba(255,255,255,0.9);
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    animation: slideUp 0.5s ease-out;
+}
+
+.prod-thumb {
+    width: 50px; height: 50px; border-radius: 8px; object-fit: cover;
+    background: #ddd;
+}
+
+.prod-info { flex: 1; }
+.prod-info h4 { font-size: 0.9rem; margin: 0; color: #333; }
+.prod-info p { font-size: 0.85rem; font-weight: bold; color: #6c5ce7; margin: 2px 0 0 0; }
+
+.btn-buy-video {
+    background: #00b894; color: white; border: none;
+    padding: 8px 15px; border-radius: 20px; font-weight: bold;
+    cursor: pointer; font-size: 0.8rem;
+    transition: 0.2s;
+}
+.btn-buy-video:hover { background: #00a884; transform: scale(1.05); }
+
+.video-close {
+    position: absolute; top: 20px; right: 20px;
+    color: white; font-size: 2rem; cursor: pointer; z-index: 10;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    background: none; border: none;
+}
+
+@keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
